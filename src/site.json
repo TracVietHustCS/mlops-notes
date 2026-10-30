@@ -1,0 +1,49 @@
+{
+  "html_title": "MLOps notes · Trác Việt",
+  "doc_suffix": "MLOps notes",
+  "storage": "mlo",
+  "brand_aria": "MLOps notes",
+  "mk": "ml",
+  "brand_text": [
+    "MLOps",
+    "notes"
+  ],
+  "home_url": "https://tracviethustcs.github.io/",
+  "nav": [
+    [
+      "Vòng đời",
+      "#mlops-principles"
+    ],
+    [
+      "Thí nghiệm",
+      "#experiments"
+    ],
+    [
+      "Phục vụ",
+      "#serving"
+    ],
+    [
+      "Giám sát",
+      "#monitoring-drift"
+    ],
+    [
+      "CI/CD/CT",
+      "#ci-cd-ct"
+    ],
+    [
+      "Luyện tập",
+      "#quiz-1"
+    ]
+  ],
+  "colors": {
+    "acc": "#3b5bdb",
+    "acc_d": "#2f49b0",
+    "acc_dk": "#91a7ff",
+    "onacc_dk": "#0b1440",
+    "navbg": "#171c3a",
+    "navbg_dk": "#11152e",
+    "mark": "#5c7cfa",
+    "mark_ink": "#0b1440"
+  },
+  "footer": "Ghi chú tự học, tự soạn, không phải tài liệu chính thức của MLflow, Kubeflow, DVC hay nhà cung cấp nào. Công cụ, API và thực hành thay đổi nhanh: hãy đối chiếu tài liệu hiện hành và thử trên dữ liệu và mô hình nhỏ trước. Mô hình ảnh hưởng đến con người cần được đánh giá và kiểm soát kỹ hơn nội dung ghi chú này."
+}

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MLOps notes · Trác Việt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0972d3; --blue-d:#075aa6; --navbg:#232f3e;
+  --bg:#ffffff; --side:#fafbfc; --ink:#202124; --muted:#5f6368; --line:#e1e4e8;
+  --link:#0972d3; --code:#f3f5f8; --codeink:#1f2933;
+  --note:#e8f0fe; --note-b:#326ce5; --tip:#e6f4ea; --tip-b:#1e8e3e; --warn:#fff4e5; --warn-b:#e37400;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --navbg:#161e2a; --bg:#0f141b; --side:#0f141b; --ink:#e4e8ee; --muted:#9aa5b1; --line:#252f3c;
+    --link:#8ab0ff; --code:#171f2a; --codeink:#dbe4ee;
+    --note:#14233f; --note-b:#5b8cf0; --tip:#10261a; --tip-b:#3fb860; --warn:#2b200f; --warn-b:#f0a03c; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --navbg:#161e2a; --bg:#0f141b; --side:#0f141b; --ink:#e4e8ee; --muted:#9aa5b1; --line:#252f3c;
+  --link:#8ab0ff; --code:#171f2a; --codeink:#dbe4ee;
+  --note:#14233f; --note-b:#5b8cf0; --tip:#10261a; --tip-b:#3fb860; --warn:#2b200f; --warn-b:#f0a03c; color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.65}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--navbg);z-index:40}
+a{color:var(--link)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
+
+/* navbar */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;height:56px;background:var(--navbg);color:#fff;
+  display:flex;align-items:center;gap:18px;padding:0 20px}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:500;font-size:18px;white-space:nowrap}
+.brand svg{width:34px;height:34px;flex:none}
+.nav .links{display:flex;gap:18px;font-size:14px}
+.nav .links a{color:#fff;text-decoration:none;opacity:.9}
+.nav .links a:hover{opacity:1;text-decoration:underline}
+.nav .sp{flex:1}
+.search{position:relative;width:260px;max-width:40vw}
+.search input{width:100%;height:34px;border:0;border-radius:4px;padding:0 12px;font:inherit;font-size:14px;
+  background:rgba(255,255,255,.18);color:#fff}
+.search input::placeholder{color:rgba(255,255,255,.8)}
+.search input:focus{background:#fff;color:#202124;outline:2px solid #fff}
+.search input:focus::placeholder{color:#6b7280}
+.ibtn{background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:4px;height:32px;padding:0 10px;
+  font:inherit;font-size:13px;cursor:pointer}
+.ibtn:hover{background:rgba(255,255,255,.14)}
+#burger{display:none;font-size:18px;padding:0 10px}
+
+/* layout */
+.shell{display:grid;grid-template-columns:290px minmax(0,1fr) 240px;max-width:1500px;margin:0 auto}
+aside#side{position:sticky;top:calc(56px + env(safe-area-inset-top,0px));align-self:start;
+  height:calc(100vh - 56px - env(safe-area-inset-top,0px));overflow-y:auto;background:var(--side);
+  border-right:1px solid var(--line);padding:16px 12px 40px}
+.prog{font-size:13px;color:var(--muted);margin:0 8px 12px}
+.prog i{display:block;height:4px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog i b{display:block;height:100%;background:var(--blue);width:0}
+.grp h3{font-size:12px;font-weight:700;color:var(--muted);margin:16px 8px 4px;letter-spacing:.02em}
+#side a{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.35}
+#side a:hover{background:var(--code)}
+#side a.on{color:var(--blue);background:var(--note);font-weight:500}
+#side a.read::after{content:"✓";margin-left:auto;color:var(--tip-b);font-size:12px}
+.none{display:none;margin:16px 8px;font-size:14px;color:var(--muted)}
+#side a.by{margin:24px 4px 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;gap:10px;color:var(--ink)}
+#side a.by:hover{border-color:var(--blue);background:transparent}
+#side a.by span{display:flex;flex-direction:column;line-height:1.25}
+#side a.by small{color:var(--muted);font-size:12px}
+
+main{padding:28px 44px 80px;min-width:0}
+.crumb{font-size:13px;color:var(--muted);margin-bottom:6px}
+.page h1{font-size:34px;font-weight:500;line-height:1.2;margin:0 0 14px}
+.lead{font-size:18px;color:var(--muted);margin:0 0 8px;max-width:70ch}
+.page h2{font-size:24px;font-weight:500;margin:40px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.page h3{font-size:18px;font-weight:500;margin:26px 0 6px}
+.page p,.page li{max-width:76ch}
+.page ul,.page ol{padding-left:24px}
+.page li{margin:3px 0}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);color:var(--codeink);padding:2px 5px;border-radius:3px}
+pre{position:relative;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow-x:auto;margin:14px 0;line-height:1.5}
+pre code{background:none;padding:0;font-size:13px;white-space:pre}
+.copy{position:absolute;top:6px;right:6px;font:inherit;font-size:12px;background:var(--bg);color:var(--muted);border:1px solid var(--line);
+  border-radius:4px;padding:2px 8px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--code);font-weight:500}
+.callout{border-left:4px solid var(--note-b);background:var(--note);padding:10px 16px;margin:18px 0;border-radius:0 6px 6px 0;max-width:76ch}
+.callout p{margin:4px 0}
+.callout>b:first-child{display:block;margin-bottom:2px}
+.callout.tip{background:var(--tip);border-color:var(--tip-b)}
+.callout.warn{background:var(--warn);border-color:var(--warn-b)}
+.dg{width:100%;height:auto;margin:16px 0;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.dg .box{fill:var(--bg);stroke:var(--blue);stroke-width:1.5}
+.dg .zone{fill:var(--code);stroke:var(--line);stroke-width:1.5}
+.dg .pod{fill:var(--note);stroke:var(--note-b);stroke-width:1}
+.dg text{fill:var(--ink);font-family:var(--font);font-size:13px}
+.dg .zt{font-weight:700;font-size:13px}
+.dg .ln{stroke:var(--blue);stroke-width:1.5;fill:none}
+.dg .dash{stroke-dasharray:5 4}
+
+.mark{display:flex;align-items:center;gap:10px;margin:40px 0 0;padding-top:20px;border-top:1px solid var(--line)}
+.mark button{font:inherit;font-size:14px;border:1px solid var(--blue);color:var(--blue);background:transparent;border-radius:4px;padding:6px 14px;cursor:pointer}
+.mark button[aria-pressed="true"]{background:var(--blue);color:#fff}
+.pn{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
+.pn a{display:block;border:1px solid var(--line);border-radius:6px;padding:10px 16px;text-decoration:none;color:var(--ink);max-width:48%}
+.pn a:hover{border-color:var(--blue)}
+.pn small{display:block;color:var(--muted);font-size:12px}
+.pn a:last-child{text-align:right;margin-left:auto}
+
+nav#toc{position:sticky;top:calc(56px + env(safe-area-inset-top,0px));align-self:start;
+  max-height:calc(100vh - 56px - env(safe-area-inset-top,0px));overflow-y:auto;padding:28px 16px 40px 0;font-size:13.5px}
+#toc h4{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:700}
+#toc a{display:block;padding:3px 0 3px 12px;border-left:2px solid var(--line);color:var(--muted);text-decoration:none;line-height:1.4}
+#toc a.l3{padding-left:26px}
+#toc a:hover{color:var(--ink)}
+#toc a.on{color:var(--blue);border-left-color:var(--blue);font-weight:500}
+footer{border-top:1px solid var(--line);margin-top:48px;padding-top:16px;font-size:13px;color:var(--muted)}
+#scrim{display:none}
+
+@media (max-width:1100px){.shell{grid-template-columns:270px minmax(0,1fr)}nav#toc{display:none}}
+@media (max-width:820px){
+  .shell{grid-template-columns:1fr}
+  .nav .links{display:none}
+  #burger{display:inline-block}
+  .brand span{font-size:16px}
+  aside#side{position:fixed;left:0;bottom:0;top:calc(56px + env(safe-area-inset-top,0px));height:auto;width:300px;max-width:86vw;z-index:25;
+    transform:translateX(-102%);transition:transform .2s}
+  aside#side.open{transform:none}
+  #scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20}
+  main{padding:20px 16px 64px}
+  .page h1{font-size:28px}
+  .search{width:auto;flex:1;max-width:none}
+  .sp{display:none}
+}
+@media (prefers-reduced-motion:reduce){aside#side{transition:none}}
+
+.nav{border-bottom:3px solid #5c7cfa}
+.mk{background:#5c7cfa;color:#0b1440;font-family:var(--mono);font-weight:700;font-size:13px;padding:4px 8px;border-radius:4px;letter-spacing:.02em}
+.brand{gap:10px}
+/* quiz */
+.qsum{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:16px 0 8px;padding:12px 16px;border:1px solid var(--line);border-radius:8px;background:var(--code)}
+.qsum b{font-weight:500}.qsum button{font:inherit;font-size:13px;padding:4px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);cursor:pointer;margin-left:auto}
+.qs{border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin:16px 0;background:var(--bg)}
+.qs.right{border-color:var(--tip-b)}.qs.wrong{border-color:#d13212}
+.qn{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:500}
+.qt{margin:0 0 12px;max-width:80ch}
+.qo{list-style:none;margin:0 0 10px;padding:0}
+.qo li{margin:6px 0;max-width:80ch}
+.qo label{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.qo label:hover{border-color:var(--blue)}
+.qo input{margin-top:5px;accent-color:var(--blue)}
+.qo li.ok label{border-color:var(--tip-b);background:var(--tip)}
+.qo li.bad label{border-color:#d13212;background:rgba(209,50,18,.1)}
+.qo li.miss label{border-color:var(--tip-b);border-style:dashed}
+.qh{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.qb{font:inherit;font-size:14px;padding:7px 18px;border:0;border-radius:4px;background:var(--blue);color:#fff;cursor:pointer}
+.qb:disabled{opacity:.5;cursor:default}
+.qe{margin-top:14px;padding:12px 16px;border-left:4px solid var(--note-b);background:var(--note);border-radius:0 6px 6px 0;max-width:80ch}
+.qe b.v{display:block;margin-bottom:4px}
+
+/* ===== site theme ===== */
+:root{--blue:#3b5bdb;--blue-d:#2f49b0;--onacc:#fff;--navbg:#171c3a;--bg:#fcfcfd;--side:#f5f6f8;--ink:#1d2229;--muted:#5b6571;--line:#dfe2e7;
+  --link:#3b5bdb;--code:#eef0f3;--codeink:#1d2229;--note:#edf1f6;--note-b:#51647b;--tip:#e7f4ea;--tip-b:#1f8a3b;--warn:#fff1e0;--warn-b:#c25b00}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--blue:#91a7ff;--blue-d:#91a7ff;--onacc:#0b1440;--navbg:#11152e;--bg:#11151a;--side:#11151a;--ink:#e3e7ec;--muted:#98a3b0;--line:#252c35;
+    --link:#91a7ff;--code:#1a2027;--codeink:#dde4ec;--note:#18212c;--note-b:#7f95b0;--tip:#102419;--tip-b:#46b866;--warn:#2a1d0c;--warn-b:#f0a03c}
+}
+:root[data-theme="dark"]{--blue:#91a7ff;--blue-d:#91a7ff;--onacc:#0b1440;--navbg:#11152e;--bg:#11151a;--side:#11151a;--ink:#e3e7ec;--muted:#98a3b0;--line:#252c35;
+  --link:#91a7ff;--code:#1a2027;--codeink:#dde4ec;--note:#18212c;--note-b:#7f95b0;--tip:#102419;--tip-b:#46b866;--warn:#2a1d0c;--warn-b:#f0a03c}
+:root[data-theme="light"]{--blue:#3b5bdb;--onacc:#fff}
+body{font-size:16px}
+.page h1{font-weight:600;letter-spacing:-.01em}
+.page h2{font-weight:600}
+.mark button[aria-pressed="true"],.qb{color:var(--onacc)}
+#side a.on{color:var(--link)}
+pre{background:#12171d;border-color:#28313c;color:#d6dde5}
+pre code{color:#d6dde5;font-size:13px}
+pre .ps{color:#5c7cfa;user-select:none}
+pre .cm{color:#7f8c99}
+pre.ascii{line-height:1.25}
+pre.ascii code{font-size:12.5px}
+.copy{background:#1b222a;color:#9fb0c1;border-color:#2c3744}
+.copy:hover{color:#fff}
+.callout.lab{background:var(--code);border-color:var(--blue)}
+.callout.lab>b:first-child::before{content:"Lab · ";color:var(--blue)}
+.callout.lab pre{margin:10px 0}
+.qs.wrong{border-color:#c0392b}
+.page code{overflow-wrap:anywhere}
+.page pre code{overflow-wrap:normal}
+@media (max-width:560px){
+  .nav{gap:10px;padding:0 12px}
+  .brand>span:last-child{display:none}
+  .search input{min-width:0}
+  #theme{padding:0 8px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <button class="ibtn" id="burger" aria-label="Mở mục lục">☰</button>
+  <a class="brand" href="#overview" aria-label="MLOps notes"><span class="mk">ml</span><span>MLOps <span style="font-weight:400;opacity:.85">notes</span></span></a>
+  <nav class="links" aria-label="Liên kết nhanh">
+    <a href="https://tracviethustcs.github.io/">← Trác Việt</a>
+    <a href="#mlops-principles">Vòng đời</a>
+    <a href="#experiments">Thí nghiệm</a>
+    <a href="#serving">Phục vụ</a>
+    <a href="#monitoring-drift">Giám sát</a>
+    <a href="#ci-cd-ct">CI/CD/CT</a>
+    <a href="#quiz-1">Luyện tập</a>
+  </nav>
+  <span class="sp"></span>
+  <div class="search"><input id="q" type="search" placeholder="Tìm trong ghi chú  ( / )" aria-label="Tìm trong ghi chú"></div>
+  <button class="ibtn" id="theme" aria-label="Đổi giao diện sáng/tối">Sáng/Tối</button>
+</header>
+<div id="scrim"></div>
+
+<div class="shell">
+  <aside id="side" aria-label="Mục lục">
+    <a href="https://tracviethustcs.github.io/" style="margin:0 0 10px;font-weight:500;color:var(--blue)">← Tất cả tài liệu</a>
+    <div class="prog"><span id="progtxt"></span><i><b id="progbar"></b></i></div>
+    <div id="side-links"></div>
+    <p class="none" id="none">Không có trang nào khớp từ khóa.</p>
+    <a class="by" href="https://github.com/TracVietHustCS" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.5 7.5 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span><b>TracViet</b><small>@TracVietHustCS</small></span>
+    </a>
+  </aside>
+
+  <main id="main">
+
+<!-- ============ OVERVIEW ============ -->
+<article class="page" data-id="overview" data-group="Bắt đầu" data-title="Tổng quan và cách học" hidden>
+<h1>Tổng quan và cách học</h1>
+<p class="lead">Bộ ghi chú về MLOps: đưa mô hình học máy từ notebook thành hệ thống chạy ổn định, tái lập được và được giám sát. Đi từ vòng đời, dữ liệu và đặc trưng, theo dõi thí nghiệm, pipeline, registry, đánh giá, phục vụ, triển khai, giám sát drift, CI/CD/CT, hạ tầng và quản trị.</p>
+<div class="callout warn"><b>Đọc trước khi dùng</b><p>Đây là ghi chú <b>tự học, tự soạn</b>, không phải tài liệu chính thức của MLflow, Kubeflow, DVC, Feast hay nhà cung cấp nào. Công cụ và API học máy thay đổi nhanh (nhất là MLflow, các nền tảng phục vụ mô hình); ghi chú không tra cứu trực tuyến nên có thể lỗi thời, hãy đối chiếu tài liệu hiện hành và thử trên dữ liệu, mô hình nhỏ trước. Mô hình ảnh hưởng tới quyết định về con người (tín dụng, tuyển dụng, y tế...) cần được đánh giá, kiểm soát và tuân thủ pháp lý kỹ hơn rất nhiều so với nội dung ở đây.</p></div>
+<h2>Bạn sẽ làm được gì sau khi học xong</h2>
+<ul><li>Giải thích vì sao đưa mô hình vào sản xuất khó hơn huấn luyện, và MLOps khác DevOps, DataOps ở đâu.</li><li>Theo dõi thí nghiệm và tái lập kết quả (dữ liệu, mã, tham số, môi trường) bằng MLflow và DVC.</li><li>Dựng pipeline huấn luyện, registry mô hình và cổng đánh giá trước khi phát hành.</li><li>Phục vụ mô hình (batch, online), triển khai an toàn (shadow, canary) và giám sát drift.</li><li>Thiết kế CI/CD/CT cho học máy, kiểm thử dữ liệu và mô hình, và hiểu quản trị mô hình.</li></ul>
+<h2>Cấu trúc</h2>
+<div class="tw"><table><tr><th>Nhóm</th><th>Trang</th><th>Nội dung</th></tr><tr><td>Nền tảng</td><td><a href="#mlops-principles">Vòng đời và nguyên tắc</a>, <a href="#data-features">Dữ liệu và đặc trưng</a>, <a href="#experiments">Theo dõi thí nghiệm</a>, <a href="#pipelines">Pipeline</a></td><td>Làm cho ML tái lập được</td></tr><tr><td>Mô hình</td><td><a href="#registry">Registry</a>, <a href="#evaluation">Đánh giá</a></td><td>Quản lý và kiểm soát chất lượng</td></tr><tr><td>Sản xuất</td><td><a href="#serving">Phục vụ</a>, <a href="#deploy-strategies">Chiến lược triển khai</a>, <a href="#monitoring-drift">Giám sát và drift</a></td><td>Đưa lên và giữ ổn định</td></tr><tr><td>Tự động hoá</td><td><a href="#ci-cd-ct">CI/CD/CT và kiểm thử ML</a>, <a href="#infra-cost">Hạ tầng và chi phí</a>, <a href="#governance">Quản trị</a></td><td>Quy trình, hạ tầng, trách nhiệm</td></tr><tr><td>Thực hành</td><td><a href="#lab-stack">Dự án mẫu cục bộ</a></td><td>scikit-learn + MLflow + FastAPI</td></tr><tr><td>Tham chiếu</td><td><a href="#cheatsheet">Cheat sheet</a>, <a href="#quiz-1">Luyện tập 1</a>, <a href="#quiz-2">Luyện tập 2</a></td><td>Tra nhanh và tự kiểm tra</td></tr></table></div>
+<h2>Môi trường thực hành</h2>
+<p>Phần lớn lab chạy cục bộ trên CPU, với mô hình nhỏ: Python 3.10 trở lên, scikit-learn, MLflow, FastAPI. Không cần GPU hay cloud.</p>
+<pre><code>python3 -m venv ~/mlops-venv &amp;&amp; . ~/mlops-venv/bin/activate
+pip install scikit-learn pandas numpy scipy mlflow fastapi uvicorn httpx joblib pytest
+python -c "import sklearn, mlflow; print(sklearn.__version__, mlflow.__version__)"</code></pre>
+<p>Liên quan: dữ liệu đầu vào ở <a href="https://tracviethustcs.github.io/dataops-notes/" target="_blank" rel="noopener">DataOps</a>, pipeline ở <a href="https://tracviethustcs.github.io/cicd-release-notes/" target="_blank" rel="noopener">CI/CD</a>, đóng gói ở <a href="https://tracviethustcs.github.io/docker-container-notes/" target="_blank" rel="noopener">Docker</a>, chạy trên <a href="https://tracviethustcs.github.io/k8s-study-notes/" target="_blank" rel="noopener">Kubernetes</a>, ứng dụng mô hình ngôn ngữ lớn ở <a href="https://tracviethustcs.github.io/llmops-notes/" target="_blank" rel="noopener">LLMOps</a>.</p>
+</article>
+<article class="page" data-id="mlops-principles" data-group="Nền tảng" data-title="Vòng đời học máy và nguyên tắc MLOps" hidden>
+<h1>Vòng đời học máy và nguyên tắc MLOps</h1>
+<p class="lead">Huấn luyện được một mô hình tốt trong notebook chỉ là phần nhỏ của công việc. MLOps lo phần còn lại: dữ liệu, pipeline, phục vụ, giám sát và vận hành liên tục, vì mô hình hỏng theo cách mà phần mềm thường không hỏng.</p>
+<h2>Mô hình trong sản xuất khác phần mềm thường</h2>
+<p>Hệ thống học máy có <b>ba thứ thay đổi</b> thay vì một: <b>mã</b>, <b>dữ liệu</b> và <b>mô hình</b>. Và mô hình có thể <b>suy giảm mà không có thay đổi mã nào</b>, chỉ vì thế giới đổi (hành vi người dùng, mùa vụ, dữ liệu nguồn).</p>
+<pre class="ascii"><code>        MÃ (code)  +  DỮ LIỆU (data)  --huấn luyện--&gt;  MÔ HÌNH (model)  --phục vụ--&gt;  DỰ ĐOÁN
+            |              |                               |                              |
+        phiên bản      phiên bản                       phiên bản                     giám sát: dữ liệu vào,
+        trong Git      (DVC, snapshot)                 (registry)                    dự đoán, kết quả thật
+     Mỗi kết quả phải truy ngược được tới đúng bộ ba mã + dữ liệu + cấu hình.</code></pre>
+<p>Bài báo "Hidden Technical Debt in Machine Learning Systems" chỉ ra phần mã học máy chỉ là hộp nhỏ giữa nhiều thành phần hạ tầng (thu thập dữ liệu, kiểm tra, phục vụ, giám sát...). Nợ kỹ thuật điển hình của ML: mã keo (glue code), "rừng pipeline", phụ thuộc dữ liệu không được khai báo, vòng phản hồi (mô hình ảnh hưởng dữ liệu tương lai của chính nó), nợ cấu hình.</p>
+<h2>Vòng đời</h2>
+<pre class="ascii"><code>  Xác định bài toán -&gt; Thu thập/chuẩn bị dữ liệu -&gt; Đặc trưng -&gt; Huấn luyện &amp; thí nghiệm
+        ^                                                                  |
+        |                                                                  v
+  Giám sát &amp; học lại  &lt;-  Phục vụ/triển khai  &lt;-  Đăng ký (registry)  &lt;-  Đánh giá &amp; kiểm thử
+        |__________ phản hồi: drift, hiệu năng giảm, dữ liệu mới, yêu cầu mới ___________|</code></pre>
+<div class="tw"><table><tr><th>Giai đoạn</th><th>Việc chính</th><th>Rủi ro điển hình</th></tr><tr><td>Xác định bài toán</td><td>Mục tiêu nghiệp vụ, chỉ số thành công, ràng buộc (độ trễ, chi phí)</td><td>Tối ưu sai chỉ số, bài toán không cần ML</td></tr><tr><td>Dữ liệu</td><td>Thu thập, làm sạch, gán nhãn, chia tập</td><td>Rò rỉ dữ liệu, lệch mẫu, nhãn sai</td></tr><tr><td>Đặc trưng</td><td>Biến đổi dữ liệu thành đầu vào mô hình</td><td><b>Lệch huấn luyện/phục vụ</b> (training-serving skew)</td></tr><tr><td>Huấn luyện</td><td>Thí nghiệm, tinh chỉnh tham số</td><td>Không tái lập được</td></tr><tr><td>Đánh giá</td><td>Chỉ số ngoại tuyến, kiểm thử hành vi</td><td>Đánh giá trên dữ liệu không đại diện</td></tr><tr><td>Triển khai</td><td>Đóng gói, phục vụ, phát hành dần</td><td>Hành vi khác môi trường huấn luyện</td></tr><tr><td>Giám sát</td><td>Dữ liệu, dự đoán, hiệu năng</td><td>Phát hiện muộn khi mô hình đã suy giảm</td></tr></table></div>
+<h2>Các mức trưởng thành của MLOps</h2>
+<p>Mô tả phổ biến (theo cách Google chia):</p>
+<div class="tw"><table><tr><th>Mức</th><th>Đặc điểm</th><th>Hệ quả</th></tr><tr><td><b>0: thủ công</b></td><td>Notebook, huấn luyện và triển khai thủ công, mô hình đưa "qua rào" cho kỹ sư triển khai</td><td>Hiếm khi cập nhật, khó tái lập, dễ lệch</td></tr><tr><td><b>1: tự động hoá pipeline huấn luyện</b></td><td>Pipeline tự động, <b>huấn luyện liên tục (CT)</b> khi có dữ liệu mới, kiểm tra dữ liệu và mô hình tự động</td><td>Cập nhật thường xuyên, tái lập được</td></tr><tr><td><b>2: tự động hoá CI/CD cho pipeline</b></td><td>Kiểm thử, xây dựng và triển khai chính pipeline tự động; thí nghiệm nhanh, an toàn</td><td>Lặp nhanh ở quy mô nhiều mô hình, nhiều nhóm</td></tr></table></div>
+<p>Không phải dự án nào cũng cần mức 2: nhiều mô hình quy mô nhỏ ở mức 1 là đủ. Chọn mức theo tần suất thay đổi và hậu quả khi sai.</p>
+<h2>Nguyên tắc cốt lõi</h2>
+<ol><li><b>Tái lập được</b>: cùng mã, dữ liệu, cấu hình, môi trường cho cùng kết quả (hoặc sai khác giải thích được).</li><li><b>Phiên bản hoá mọi thứ</b>: mã, dữ liệu, tham số, mô hình, môi trường.</li><li><b>Tự động hoá</b> pipeline từ dữ liệu tới triển khai; thủ công chỉ ở nơi có chủ đích (duyệt).</li><li><b>Kiểm thử cả dữ liệu và mô hình</b>, không chỉ mã.</li><li><b>Một đường cho huấn luyện và phục vụ</b>: dùng cùng mã đặc trưng để tránh lệch.</li><li><b>Giám sát liên tục</b> dữ liệu và dự đoán; mô hình suy giảm lặng lẽ.</li><li><b>Phát hành dần và quay lui được</b> như mọi hệ thống sản xuất (<a href="#deploy-strategies">Chiến lược triển khai</a>).</li><li><b>Trách nhiệm và minh bạch</b>: tài liệu mô hình, kiểm soát thiên lệch, nhật ký kiểm toán (<a href="#governance">Quản trị</a>).</li><li><b>Bắt đầu đơn giản</b>: mô hình đơn giản trong hệ thống tốt thắng mô hình phức tạp trong hệ thống tệ; thường nên có đường cơ sở dễ (quy tắc, hồi quy logistic).</li></ol>
+<h2>Vai trò</h2>
+<div class="tw"><table><tr><th>Vai trò</th><th>Trọng tâm</th></tr><tr><td>Nhà khoa học dữ liệu</td><td>Bài toán, đặc trưng, mô hình, đánh giá</td></tr><tr><td>Kỹ sư học máy (ML engineer)</td><td>Biến mô hình thành pipeline và dịch vụ chạy được, tối ưu</td></tr><tr><td>Kỹ sư dữ liệu</td><td>Dữ liệu và đặc trưng đáng tin cậy (<a href="https://tracviethustcs.github.io/dataops-notes/" target="_blank" rel="noopener">DataOps</a>)</td></tr><tr><td>Kỹ sư nền tảng/DevOps</td><td>Hạ tầng, CI/CD, giám sát, bảo mật</td></tr><tr><td>Chủ sản phẩm, pháp lý, rủi ro</td><td>Mục tiêu, ràng buộc, tuân thủ</td></tr></table></div>
+<p>Ranh giới mờ và khác nhau theo tổ chức; điều quan trọng là có chủ sở hữu rõ cho từng phần của hệ thống.</p>
+<h2>So với DevOps và DataOps</h2>
+<div class="tw"><table><tr><th></th><th>DevOps</th><th>DataOps</th><th>MLOps</th></tr><tr><td>Thứ được quản lý</td><td>Mã</td><td>Dữ liệu và đường ống</td><td>Mã, dữ liệu <b>và mô hình</b></td></tr><tr><td>Cách hỏng</td><td>Lỗi mã, hạ tầng</td><td>Dữ liệu xấu, trễ</td><td>Cả hai, cộng <b>suy giảm theo thời gian</b></td></tr><tr><td>Kiểm thử</td><td>Mã</td><td>Dữ liệu</td><td>Dữ liệu, mô hình, hành vi</td></tr><tr><td>Phát hành</td><td>Phiên bản ứng dụng</td><td>Biến đổi, bảng</td><td>Mô hình kèm đặc trưng, có đánh giá</td></tr></table></div>
+<div class="callout lab"><b>Phân tích một hệ thống học máy</b><p>Chọn một ví dụ (dự đoán khách rời bỏ, phát hiện gian lận, đề xuất sản phẩm). Trả lời:</p>
+<ol><li>Mục tiêu nghiệp vụ và <b>chỉ số thành công</b> là gì? Sai thì ai chịu hậu quả?</li><li><b>Dữ liệu</b> đến từ đâu, nhãn có sau bao lâu (ngay, hay vài tuần)?</li><li>Điều gì có thể <b>thay đổi</b> theo thời gian khiến mô hình suy giảm (hành vi, mùa vụ, sản phẩm mới)?</li><li>Bạn sẽ <b>phát hiện</b> suy giảm bằng cách nào khi nhãn đến trễ?</li><li>Mức MLOps hiện tại của một dự án bạn biết là 0, 1 hay 2, và bước nâng cấp rẻ nhất, có ích nhất là gì?</li></ol></div>
+</article>
+<article class="page" data-id="data-features" data-group="Nền tảng" data-title="Dữ liệu và đặc trưng cho học máy" hidden>
+<h1>Dữ liệu và đặc trưng cho học máy</h1>
+<p class="lead">Dữ liệu và đặc trưng quyết định chất lượng mô hình nhiều hơn thuật toán. Hai nguy cơ lớn nhất không nằm ở mô hình: rò rỉ dữ liệu và lệch giữa huấn luyện với phục vụ.</p>
+<h2>Phiên bản hoá dữ liệu</h2>
+<p>Mã nằm trong Git, nhưng dữ liệu quá lớn cho Git. Cần cách gắn <b>đúng phiên bản dữ liệu</b> với đúng commit mã và mô hình.</p>
+<p><b>DVC (Data Version Control)</b> lưu <b>con trỏ</b> nhỏ trong Git và dữ liệu thật ở kho từ xa (S3, GCS, SSH...):</p>
+<pre><code>git init &amp;&amp; dvc init
+dvc add data/train.csv                  # tạo data/train.csv.dvc (con trỏ, commit vào Git) và bỏ tệp lớn khỏi Git
+git add data/train.csv.dvc data/.gitignore &amp;&amp; git commit -m "thêm dữ liệu huấn luyện v1"
+dvc remote add -d storage s3://my-bucket/dvc
+dvc push                                 # đẩy dữ liệu lên kho từ xa
+<span class="cm"># ở máy khác, hoặc commit cũ:</span>
+git checkout &lt;commit&gt; &amp;&amp; dvc pull        # lấy đúng dữ liệu của commit đó</code></pre>
+<p>Các cách khác: bảng có <b>time travel</b> (Delta, Iceberg: truy vấn bảng tại một thời điểm), <b>snapshot bất biến</b> trong object storage với đường dẫn có phiên bản, hoặc lưu mã băm dữ liệu cùng thí nghiệm. Quy tắc chung: mỗi mô hình phải truy ngược được tới <b>đúng dữ liệu đã huấn luyện nó</b>.</p>
+<h2>Kiểm tra dữ liệu trước khi huấn luyện</h2>
+<p>Huấn luyện trên dữ liệu xấu cho mô hình xấu mà không báo lỗi. Kiểm tra tự động trước mỗi lần huấn luyện:</p>
+<div class="tw"><table><tr><th>Kiểm tra</th><th>Ví dụ</th></tr><tr><td><b>Schema</b></td><td>Đủ cột, đúng kiểu</td></tr><tr><td><b>Miền giá trị</b></td><td>Tuổi trong 0..120, giá không âm</td></tr><tr><td><b>Thiếu dữ liệu</b></td><td>Tỷ lệ NULL không vượt ngưỡng</td></tr><tr><td><b>Phân phối</b></td><td>So với bộ dữ liệu huấn luyện trước: có lệch mạnh không</td></tr><tr><td><b>Nhãn</b></td><td>Tỷ lệ các lớp hợp lý, không có nhãn rỗng</td></tr><tr><td><b>Trùng lặp</b></td><td>Dòng trùng, rò rỉ giữa tập huấn luyện và kiểm thử</td></tr></table></div>
+<p>Công cụ: Pandera, Great Expectations, TensorFlow Data Validation, Evidently. Xem thêm <a href="https://tracviethustcs.github.io/dataops-notes/#data-quality" target="_blank" rel="noopener">Chất lượng dữ liệu</a>.</p>
+<h2>Chia dữ liệu và rò rỉ</h2>
+<div class="tw"><table><tr><th>Tập</th><th>Dùng để</th></tr><tr><td><b>Huấn luyện (train)</b></td><td>Học tham số</td></tr><tr><td><b>Kiểm định (validation)</b></td><td>Chọn siêu tham số, so sánh mô hình</td></tr><tr><td><b>Kiểm thử (test)</b></td><td>Đánh giá cuối cùng, <b>dùng ít, giữ nguyên</b></td></tr></table></div>
+<p><b>Rò rỉ dữ liệu (data leakage)</b> là khi thông tin từ tương lai hoặc từ tập kiểm thử lọt vào huấn luyện, làm điểm đánh giá đẹp giả tạo rồi sụp đổ khi triển khai. Các dạng phổ biến:</p>
+<ul><li><b>Rò rỉ theo thời gian</b>: chia ngẫu nhiên dữ liệu chuỗi thời gian, để mô hình "nhìn thấy tương lai". Với dữ liệu thời gian phải chia <b>theo thời gian</b> (huấn luyện trên quá khứ, kiểm thử trên tương lai).</li><li><b>Đặc trưng chứa đáp án</b>: đặc trưng chỉ có sau khi biết nhãn (ví dụ "số lần gọi hỗ trợ chấm dứt hợp đồng" khi dự đoán khách rời bỏ).</li><li><b>Tiền xử lý trên toàn bộ dữ liệu</b>: chuẩn hoá hoặc điền thiếu bằng thống kê tính trên cả tập kiểm thử. Phải <b>fit trên train, rồi áp dụng</b> cho validation/test.</li><li><b>Trùng giữa các tập</b>: cùng một người/đối tượng xuất hiện ở cả hai tập.</li></ul>
+<pre><code>from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+
+<span class="cm"># Pipeline đảm bảo scaler chỉ fit trên dữ liệu train (kể cả trong cross-validation)</span>
+model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+model.fit(X_train, y_train)
+print(model.score(X_test, y_test))</code></pre>
+<h2>Lệch giữa huấn luyện và phục vụ (training-serving skew)</h2>
+<p>Đây là nguyên nhân hàng đầu khiến mô hình tốt ngoại tuyến lại kém khi chạy thật: đặc trưng được <b>tính khác nhau</b> ở hai nơi (huấn luyện bằng SQL/pandas trên kho, phục vụ bằng mã khác trong dịch vụ). Giải pháp:</p>
+<ul><li><b>Một định nghĩa đặc trưng, dùng ở cả hai nơi</b>: đóng gói tiền xử lý vào chính mô hình (pipeline), hoặc dùng <b>feature store</b>.</li><li>Kiểm tra bằng cách ghi lại <b>đặc trưng thật lúc phục vụ</b> rồi so với đặc trưng tính ngoại tuyến cho cùng thực thể.</li><li>Kiểm thử tương đương: cùng đầu vào cho cùng đặc trưng ở hai đường.</li></ul>
+<h2>Feature store</h2>
+<p>Feature store là nơi <b>định nghĩa, tính, lưu và phục vụ đặc trưng</b> cho cả huấn luyện lẫn suy luận.</p>
+<pre class="ascii"><code>   Nguồn dữ liệu --&gt; định nghĩa đặc trưng (một lần) --+--&gt; KHO NGOẠI TUYẾN (offline): lịch sử lớn -&gt; huấn luyện
+                                                      |        get_historical_features (point-in-time đúng)
+                                                      +--&gt; KHO TRỰC TUYẾN (online): giá trị mới nhất, độ trễ ms -&gt; suy luận
+                                                               get_online_features</code></pre>
+<div class="tw"><table><tr><th>Thành phần</th><th>Vai trò</th></tr><tr><td><b>Kho ngoại tuyến</b></td><td>Lưu lịch sử đặc trưng để dựng tập huấn luyện</td></tr><tr><td><b>Kho trực tuyến</b></td><td>Phục vụ giá trị mới nhất với độ trễ thấp</td></tr><tr><td><b>Point-in-time join</b></td><td>Khi dựng tập huấn luyện, lấy giá trị đặc trưng <b>đúng tại thời điểm</b> của mỗi mẫu, không lấy giá trị về sau (chặn rò rỉ thời gian)</td></tr><tr><td><b>Tái sử dụng</b></td><td>Nhiều mô hình dùng chung một đặc trưng đã kiểm thử</td></tr></table></div>
+<p>Công cụ: Feast (mã nguồn mở), các feature store của Databricks, SageMaker, Vertex AI, Tecton. Nó không bắt buộc: dự án nhỏ có thể đóng gói tiền xử lý trong pipeline của mô hình và đủ.</p>
+<h2>Gán nhãn và chất lượng nhãn</h2>
+<ul><li>Nhãn sai làm trần chất lượng của mô hình. Đo <b>độ đồng thuận giữa người gán nhãn</b>, rà soát mẫu.</li><li><b>Nhãn đến trễ</b> (khách rời bỏ biết sau 3 tháng): ảnh hưởng cách đánh giá và giám sát (<a href="#monitoring-drift">Giám sát</a>).</li><li>Vòng phản hồi: nhãn có thể bị ảnh hưởng bởi chính mô hình (chỉ biết kết quả của người được duyệt vay).</li></ul>
+<div class="callout lab"><b>Rò rỉ do chọn đặc trưng trên toàn bộ dữ liệu</b><pre><code>python3 - &lt;&lt;'EOF'
+import numpy as np
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import make_pipeline
+
+rng = np.random.default_rng(0)
+X = rng.normal(size=(100, 2000))          # 2000 đặc trưng HOÀN TOÀN là nhiễu
+y = rng.integers(0, 2, size=100)          # nhãn ngẫu nhiên: không có gì để học, điểm đúng phải gần 0,5
+
+<span class="cm"># SAI: chọn 20 đặc trưng "tốt nhất" bằng TOÀN BỘ dữ liệu (kể cả phần sẽ dùng để kiểm thử), rồi mới cross-validate</span>
+X_leak = SelectKBest(f_classif, k=20).fit_transform(X, y)
+leak = cross_val_score(LogisticRegression(max_iter=1000), X_leak, y, cv=5).mean()
+
+<span class="cm"># ĐÚNG: việc chọn đặc trưng nằm TRONG pipeline, nên chỉ fit trên phần train của từng fold</span>
+pipe = make_pipeline(SelectKBest(f_classif, k=20), LogisticRegression(max_iter=1000))
+good = cross_val_score(pipe, X, y, cv=5).mean()
+
+print("rò rỉ (SAI) :", round(leak, 3), " &lt;- đẹp một cách vô lý trên dữ liệu ngẫu nhiên")
+print("pipeline (ĐÚNG):", round(good, 3), " &lt;- gần mức ngẫu nhiên (0,5; dao động theo mẫu)")
+EOF</code></pre>
+<p>Hai con số khác nhau thế nào, và vì sao điểm "rò rỉ" cao dù dữ liệu hoàn toàn ngẫu nhiên? Lập luận tương tự áp dụng cho chuẩn hoá, điền thiếu, mã hoá theo trung bình nhãn. Viết ba cách rò rỉ khác bạn có thể gặp trong dự án của mình.</p></div>
+</article>
+<article class="page" data-id="registry" data-group="Mô hình" data-title="Model registry" hidden>
+<h1>Model registry</h1>
+<p class="lead">Model registry là kho trung tâm quản lý các phiên bản mô hình: ai huấn luyện, từ dữ liệu nào, chỉ số ra sao, đang ở giai đoạn nào, và bản nào đang chạy ở production. Nó biến "tệp mô hình trong thư mục" thành tài sản có kiểm soát.</p>
+<h2>Vì sao cần</h2>
+<p>Không có registry, câu hỏi cơ bản không trả lời được: <b>mô hình đang chạy ở production là bản nào? huấn luyện từ đâu? có thể quay về bản trước không?</b> Mô hình bị lưu rải rác (<code>model_final_v2_ok.pkl</code>), không ai chắc cái nào đang được dùng.</p>
+<p>Registry cung cấp:</p>
+<div class="tw"><table><tr><th>Khả năng</th><th>Ý nghĩa</th></tr><tr><td><b>Phiên bản</b></td><td>Mỗi lần đăng ký tạo phiên bản số mới, bất biến</td></tr><tr><td><b>Lineage (nguồn gốc)</b></td><td>Liên kết phiên bản với run huấn luyện, commit mã, phiên bản dữ liệu, tham số</td></tr><tr><td><b>Siêu dữ liệu và chỉ số</b></td><td>Chỉ số đánh giá, mô tả, thẻ, tác giả</td></tr><tr><td><b>Giai đoạn / bí danh</b></td><td>Đánh dấu bản nào là "champion" (production), "challenger" (ứng viên)</td></tr><tr><td><b>Quy trình duyệt</b></td><td>Chuyển bản ứng viên lên production cần đạt cổng và có người duyệt</td></tr><tr><td><b>Lịch sử và kiểm toán</b></td><td>Ai đổi gì, khi nào</td></tr><tr><td><b>Quay lui</b></td><td>Chuyển bí danh về phiên bản trước</td></tr></table></div>
+<h2>MLflow Model Registry</h2>
+<pre><code>import mlflow
+from mlflow import MlflowClient
+
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+client = MlflowClient()
+
+<span class="cm"># Đăng ký mô hình từ một run đã lưu (run_id lấy từ theo dõi thí nghiệm)</span>
+result = mlflow.register_model(f"runs:/{run_id}/model", "churn-model")
+print("phiên bản mới:", result.version)
+
+<span class="cm"># Gắn bí danh thay cho "giai đoạn" (các bản MLflow mới ưu tiên bí danh và thẻ)</span>
+client.set_registered_model_alias("churn-model", "challenger", result.version)
+
+<span class="cm"># Sau khi vượt cổng đánh giá và được duyệt: nâng thành champion</span>
+client.set_registered_model_alias("churn-model", "champion", result.version)
+
+<span class="cm"># Dịch vụ tải mô hình theo bí danh, không cần biết số phiên bản</span>
+model = mlflow.pyfunc.load_model("models:/churn-model@champion")
+preds = model.predict(X_new)</code></pre>
+<p>Điểm hay của bí danh: <b>dịch vụ phục vụ tham chiếu <code>@champion</code></b>, và việc nâng cấp hay quay lui là <b>đổi con trỏ</b> (không phải triển khai lại mã). API chính xác (bí danh hay stage, <code>artifact_path</code> hay <code>name</code>) thay đổi giữa các phiên bản MLflow: đối chiếu tài liệu bản bạn dùng.</p>
+<p>Các registry khác: registry của SageMaker, Vertex AI, Azure ML, Weights &amp; Biases, Hugging Face Hub (cho mô hình dùng chung).</p>
+<h2>Quy trình đưa mô hình lên production</h2>
+<pre class="ascii"><code>   Huấn luyện --&gt; đăng ký phiên bản N --&gt; [cổng tự động: chỉ số &gt;= champion, kiểm thử hành vi, kiểm tra thiên lệch]
+                                                    |
+                                                  đạt --&gt; alias "challenger" --&gt; triển khai shadow/canary
+                                                                                        |
+                                              [duyệt của con người nếu rủi ro cao] --&gt; alias "champion"
+                                                                                        |
+                                                                     giữ phiên bản cũ để quay lui nhanh</code></pre>
+<ul><li><b>Cổng tự động</b> kiểm tra điều kiện khách quan (<a href="#evaluation">Đánh giá</a>).</li><li><b>Duyệt của con người</b> cho mô hình rủi ro cao (tín dụng, y tế): xem tài liệu mô hình (model card), thiên lệch, tác động.</li><li><b>Giữ phiên bản cũ</b> có thể phục vụ ngay để quay lui.</li></ul>
+<h2>Tài liệu đi kèm mô hình</h2>
+<p>Mỗi phiên bản nên có:</p>
+<ul><li><b>Mô tả mục đích và giới hạn</b> (không dùng cho đối tượng nào).</li><li><b>Dữ liệu huấn luyện</b> (nguồn, khoảng thời gian, phiên bản).</li><li><b>Chỉ số đánh giá</b> tổng và theo lát cắt.</li><li><b>Môi trường</b> (thư viện, phiên bản) để tái lập.</li><li><b>Chữ ký (signature)</b> đầu vào/đầu ra mong đợi.</li><li><b>Người chịu trách nhiệm</b> và cách liên hệ.</li></ul>
+<p>Xem <a href="#governance">Quản trị</a> về model card.</p>
+<h2>Chữ ký và hợp đồng đầu vào</h2>
+<p>Registry (MLflow <code>signature</code>) lưu cấu trúc đầu vào/đầu ra; dịch vụ phục vụ có thể <b>từ chối đầu vào sai schema</b> thay vì trả dự đoán vô nghĩa. Đây là hợp đồng giữa mô hình và nơi gọi, giống <a href="https://tracviethustcs.github.io/dataops-notes/#principles-architecture" target="_blank" rel="noopener">hợp đồng dữ liệu</a>.</p>
+<h2>Bảo mật registry</h2>
+<ul><li>Mô hình có thể chứa <b>mã thực thi</b> (định dạng pickle tải về chạy được mã tuỳ ý): chỉ tải mô hình từ nguồn bạn tin và dùng định dạng an toàn hơn (ONNX, safetensors) khi có thể.</li><li>Phân quyền: ai đăng ký, ai được nâng lên production.</li><li>Ký và xác minh artifact mô hình (<a href="https://tracviethustcs.github.io/k8s-study-notes/#adv-supply-chain" target="_blank" rel="noopener">chuỗi cung ứng</a>).</li></ul>
+<div class="callout lab"><b>Đăng ký, gắn bí danh và quay lui</b><pre><code>python3 - &lt;&lt;'EOF'
+import mlflow, mlflow.sklearn
+from mlflow import MlflowClient
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+mlflow.set_tracking_uri("sqlite:///mlflow-reg.db"); mlflow.set_experiment("registry-lab")
+client = MlflowClient()
+X, y = make_classification(n_samples=500, random_state=0)
+versions = []
+for C in (0.1, 1.0):
+    with mlflow.start_run() as run:
+        mlflow.sklearn.log_model(LogisticRegression(C=C, max_iter=500).fit(X, y), "model")
+        v = mlflow.register_model(f"runs:/{run.info.run_id}/model", "demo-model")
+        versions.append(v.version)
+print("các phiên bản:", versions)
+client.set_registered_model_alias("demo-model", "champion", versions[0])
+m = mlflow.pyfunc.load_model("models:/demo-model@champion"); print("champion v", versions[0], "dự đoán", m.predict(X[:3]))
+client.set_registered_model_alias("demo-model", "champion", versions[1])       # nâng cấp
+print("champion giờ là v", client.get_model_version_by_alias("demo-model", "champion").version)
+client.set_registered_model_alias("demo-model", "champion", versions[0])       # quay lui chỉ là đổi con trỏ
+print("quay lui về v", client.get_model_version_by_alias("demo-model", "champion").version)
+EOF</code></pre>
+<p>Quan sát: việc nâng cấp và quay lui có cần triển khai lại mã dịch vụ không? Dịch vụ tải <code>models:/demo-model@champion</code> có thể phát hiện bí danh đổi bằng cách nào (tải lại định kỳ, hay khởi động lại)?</p></div>
+</article>
+<article class="page" data-id="evaluation" data-group="Mô hình" data-title="Đánh giá mô hình và cổng chất lượng" hidden>
+<h1>Đánh giá mô hình và cổng chất lượng</h1>
+<p class="lead">Đánh giá quyết định mô hình có được phát hành hay không. Chỉ số tổng thể một con số thường che giấu những chỗ mô hình tệ; cần đánh giá theo lát cắt, so với đường cơ sở và mô hình hiện tại, và kiểm thử hành vi.</p>
+<h2>Chọn chỉ số đúng bài toán</h2>
+<div class="tw"><table><tr><th>Bài toán</th><th>Chỉ số thường dùng</th><th>Lưu ý</th></tr><tr><td>Phân loại cân bằng</td><td>Accuracy, F1</td><td>Accuracy vô nghĩa khi lớp lệch</td></tr><tr><td>Phân loại <b>lệch lớp</b> (gian lận, bệnh hiếm)</td><td>Precision, recall, PR-AUC, F1</td><td>99% accuracy có thể là mô hình luôn đoán "không gian lận"</td></tr><tr><td>Xếp hạng điểm</td><td>ROC-AUC, PR-AUC</td><td>Không phụ thuộc ngưỡng</td></tr><tr><td>Hồi quy</td><td>MAE, RMSE, MAPE</td><td>MAE bền với ngoại lệ, RMSE phạt sai lớn</td></tr><tr><td>Đề xuất, tìm kiếm</td><td>NDCG, MAP, recall@k</td><td>Đo thứ hạng</td></tr><tr><td>Dự báo chuỗi thời gian</td><td>MAE, sMAPE; đánh giá theo cửa sổ trượt</td><td>Chia theo thời gian</td></tr></table></div>
+<p>Chỉ số kỹ thuật phải <b>gắn với chỉ số nghiệp vụ</b>: precision/recall được chuyển thành chi phí (mỗi cảnh báo giả tốn bao nhiêu, mỗi ca bỏ sót tốn bao nhiêu), và <b>ngưỡng quyết định</b> được chọn theo chi phí đó chứ không mặc định 0,5.</p>
+<h2>Đường cơ sở và so sánh</h2>
+<ul><li><b>Đường cơ sở đơn giản</b> (luôn đoán lớp phổ biến, hồi quy logistic, quy tắc nghiệp vụ): mô hình phức tạp phải thắng nó rõ rệt mới đáng.</li><li><b>So với mô hình hiện tại ("champion")</b> trên <b>cùng tập đánh giá</b>: mô hình mới tốt hơn thật hay chỉ nhiễu?</li><li><b>Khoảng tin cậy</b>: so sánh sai khác với độ dao động (nhiều hạt giống, bootstrap), không chỉ hai con số.</li></ul>
+<h2>Đánh giá theo lát cắt</h2>
+<p>Điểm trung bình tốt có thể che mô hình <b>rất tệ ở một nhóm</b> (một vùng, một thiết bị, một nhóm khách hàng thiểu số).</p>
+<pre><code>import pandas as pd
+from sklearn.metrics import roc_auc_score
+
+df = X_test.assign(y=y_test, score=model.predict_proba(X_test)[:, 1])
+for col in ["region", "device"]:
+    for val, g in df.groupby(col):
+        if g["y"].nunique() == 2 and len(g) &gt;= 200:                 # đủ mẫu và đủ hai lớp
+            print(f"{col}={val}: n={len(g)} auc={roc_auc_score(g['y'], g['score']):.3f}")</code></pre>
+<p>Đặt <b>ngưỡng tối thiểu theo lát cắt quan trọng</b>, và chú ý lát cắt có ít mẫu (chỉ số dao động mạnh).</p>
+<h2>Thiên lệch và công bằng</h2>
+<p>Đánh giá hiệu năng <b>tách theo nhóm được bảo vệ</b> (nếu được phép và phù hợp pháp lý) để thấy chênh lệch. Một số chỉ số công bằng:</p>
+<div class="tw"><table><tr><th>Chỉ số</th><th>Ý nghĩa</th></tr><tr><td><b>Demographic parity</b></td><td>Tỷ lệ dự đoán dương như nhau giữa các nhóm</td></tr><tr><td><b>Equalized odds</b></td><td>Tỷ lệ dương thật và dương giả như nhau giữa các nhóm</td></tr><tr><td><b>Predictive parity</b></td><td>Độ chính xác của dự đoán dương như nhau</td></tr></table></div>
+<p>Các tiêu chí này <b>mâu thuẫn nhau</b> trong nhiều trường hợp (không thể thoả mãn đồng thời), nên chọn tiêu chí nào là <b>quyết định nghiệp vụ và đạo đức</b>, có sự tham gia của pháp lý, không chỉ kỹ thuật. Thư viện: Fairlearn, AIF360. Xem <a href="#governance">Quản trị</a>.</p>
+<h2>Kiểm thử hành vi</h2>
+<p>Ngoài chỉ số, kiểm thử mô hình như phần mềm:</p>
+<div class="tw"><table><tr><th>Loại</th><th>Ví dụ</th></tr><tr><td><b>Bất biến (invariance)</b></td><td>Đổi tên người, đổi thứ tự không liên quan thì dự đoán không đổi</td></tr><tr><td><b>Hướng mong đợi (directional)</b></td><td>Tăng thu nhập (giữ nguyên các thứ khác) không làm điểm tín dụng giảm</td></tr><tr><td><b>Ca biên</b></td><td>Giá trị thiếu, cực trị, đầu vào hiếm</td></tr><tr><td><b>Hồi quy</b></td><td>Các ca đã từng sai được lưu lại thành bộ kiểm thử, mô hình mới không được tệ hơn</td></tr><tr><td><b>Ổn định</b></td><td>Nhiễu nhỏ ở đầu vào không làm dự đoán đổi lớn</td></tr></table></div>
+<pre><code>def test_dat_hang_khong_phu_thuoc_vao_ten(model, sample):
+    a = sample.copy(); b = sample.copy()
+    a["name"] = "An"; b["name"] = "Bình"
+    assert model.predict(a)[0] == model.predict(b)[0]
+
+def test_thu_nhap_cao_hon_khong_lam_giam_diem(model, sample):
+    low = sample.copy(); high = sample.copy()
+    low["income"] = 10_000; high["income"] = 20_000
+    assert model.predict_proba(high)[0, 1] &gt;= model.predict_proba(low)[0, 1] - 1e-6</code></pre>
+<h2>Cổng chất lượng trước khi đăng ký</h2>
+<p>Mô hình mới chỉ đi tiếp nếu đạt <b>mọi</b> điều kiện:</p>
+<pre><code>def quality_gate(new, champion, min_auc=0.75, max_drop=0.005):
+    checks = {
+        "AUC tối thiểu":            new["auc"] &gt;= min_auc,
+        "Không tệ hơn champion":    new["auc"] &gt;= champion["auc"] - max_drop,
+        "Lát cắt yếu nhất đủ":      new["worst_slice_auc"] &gt;= 0.70,
+        "Độ trễ dự đoán đạt":       new["p95_latency_ms"] &lt;= 50,
+        "Kiểm thử hành vi qua":     new["behavior_tests_passed"],
+    }
+    failed = [k for k, ok in checks.items() if not ok]
+    return (not failed), failed</code></pre>
+<ul><li>Cổng là <b>mã</b>, nằm trong pipeline và Git, thay đổi qua review.</li><li>Ngưỡng cần có lý do (từ yêu cầu nghiệp vụ), không tuỳ ý.</li><li><b>Thất bại thì dừng và báo</b>, không tự động triển khai.</li><li>Ghi kết quả cổng vào registry (thẻ) để kiểm toán.</li></ul>
+<h2>Đánh giá ngoại tuyến và trực tuyến</h2>
+<p>Chỉ số ngoại tuyến (trên dữ liệu lịch sử) là <b>đại diện</b> cho hiệu quả thật, không phải bản thân nó. Mô hình tốt ngoại tuyến vẫn có thể không cải thiện chỉ số kinh doanh. Xác nhận bằng thí nghiệm trực tuyến (A/B, canary) trước khi coi là thành công (<a href="#deploy-strategies">Chiến lược triển khai</a>).</p>
+<div class="callout lab"><b>Cổng chất lượng với đánh giá theo lát cắt</b><pre><code>python3 - &lt;&lt;'EOF'
+import numpy as np, pandas as pd
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+
+X, y = make_classification(n_samples=4000, n_features=15, n_informative=6, random_state=3)
+region = np.random.RandomState(3).choice(["A", "B", "C"], size=len(y), p=[0.6, 0.3, 0.1])
+Xtr, Xte, ytr, yte, rtr, rte = train_test_split(X, y, region, test_size=0.3, random_state=3)
+
+champion = LogisticRegression(max_iter=1000).fit(Xtr, ytr)
+challenger = RandomForestClassifier(n_estimators=150, random_state=3).fit(Xtr, ytr)
+
+def report(m):
+    s = m.predict_proba(Xte)[:, 1]
+    out = {"auc": roc_auc_score(yte, s)}
+    out["worst_slice_auc"] = min(roc_auc_score(yte[rte == r], s[rte == r]) for r in "ABC")
+    return out
+
+c, n = report(champion), report(challenger)
+print("champion  :", {k: round(v, 3) for k, v in c.items()})
+print("challenger:", {k: round(v, 3) for k, v in n.items()})
+checks = {"AUC &gt;= 0.75": n["auc"] &gt;= 0.75, "không tệ hơn champion": n["auc"] &gt;= c["auc"] - 0.005, "lát cắt yếu nhất &gt;= 0.70": n["worst_slice_auc"] &gt;= 0.70}
+print(checks, "-&gt;", "ĐI TIẾP" if all(checks.values()) else "DỪNG")
+EOF</code></pre>
+<p>Challenger có vượt cổng không? Lát cắt nào yếu nhất, và nếu AUC tổng thể tốt nhưng một vùng nhỏ rất tệ, bạn sẽ có quyết định gì và với ai?</p></div>
+</article>
+<article class="page" data-id="serving" data-group="Sản xuất" data-title="Phục vụ mô hình: batch, online và streaming" hidden>
+<h1>Phục vụ mô hình: batch, online và streaming</h1>
+<p class="lead">Mô hình chỉ có giá trị khi tạo ra dự đoán đúng chỗ, đúng lúc. Cách phục vụ phụ thuộc vào độ trễ yêu cầu và khối lượng: tính trước hàng loạt, trả lời từng yêu cầu, hoặc xử lý luồng.</p>
+<h2>Ba kiểu phục vụ</h2>
+<div class="tw"><table><tr><th>Kiểu</th><th>Cách</th><th>Độ trễ</th><th>Hợp với</th></tr><tr><td><b>Batch</b> (theo lô)</td><td>Chạy mô hình định kỳ trên cả tập dữ liệu, ghi kết quả vào bảng</td><td>Giờ đến ngày</td><td>Báo cáo, điểm số tính trước (khách có khả năng rời bỏ), đề xuất gửi email</td></tr><tr><td><b>Online</b> (thời gian thực)</td><td>Dịch vụ API trả dự đoán cho từng yêu cầu</td><td>Mili giây đến vài trăm ms</td><td>Tìm kiếm, gian lận lúc thanh toán, đề xuất trong ứng dụng</td></tr><tr><td><b>Streaming</b></td><td>Xử lý sự kiện liên tục, dự đoán trên luồng</td><td>Giây</td><td>Phát hiện bất thường, IoT</td></tr></table></div>
+<p><b>Batch</b> thường là lựa chọn đầu tiên nên cân nhắc: đơn giản, rẻ, dễ kiểm tra, dễ quay lui. Chọn online khi dự đoán phụ thuộc vào ngữ cảnh chỉ có lúc yêu cầu và độ trễ giây là không chấp nhận.</p>
+<h2>Dịch vụ online đơn giản với FastAPI</h2>
+<pre><code><span class="cm"># serve.py</span>
+import joblib
+import numpy as np
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+model = joblib.load("model.joblib")                # tải một lần lúc khởi động, không tải mỗi yêu cầu
+
+class Features(BaseModel):
+    f0: float
+    f1: float
+    f2: float
+    tenure_months: int = Field(ge=0, le=600)       # kiểm tra đầu vào: từ chối giá trị vô lý
+
+@app.get("/healthz")
+def health():
+    return {"status": "ok"}
+
+@app.post("/predict")
+def predict(x: Features):
+    row = np.array([[x.f0, x.f1, x.f2, x.tenure_months]])
+    p = float(model.predict_proba(row)[0, 1])
+    return {"churn_probability": p, "model_version": "1"}</code></pre>
+<pre><code>uvicorn serve:app --host 0.0.0.0 --port 8000
+curl -s -X POST localhost:8000/predict -H 'content-type: application/json' -d '{"f0":0.1,"f1":-0.3,"f2":1.2,"tenure_months":14}'</code></pre>
+<p>Điểm quan trọng khi phục vụ:</p>
+<ul><li><b>Kiểm tra đầu vào</b> (schema, miền giá trị): đầu vào lạ không được trả dự đoán vô nghĩa mà không báo.</li><li><b>Tải mô hình một lần</b>, giữ trong bộ nhớ.</li><li><b>Healthcheck</b> và <code>readiness</code> đúng nghĩa (<a href="https://tracviethustcs.github.io/k8s-study-notes/#ops-probes" target="_blank" rel="noopener">Probe</a>): chỉ nhận traffic khi mô hình đã tải xong.</li><li><b>Ghi log</b> đầu vào và dự đoán (có kiểm soát PII) để giám sát và học lại (<a href="#monitoring-drift">Giám sát</a>).</li><li><b>Trả kèm phiên bản mô hình</b> để truy vết.</li><li><b>Giới hạn thời gian và tài nguyên</b>; dự đoán mất quá lâu thì có phương án dự phòng (giá trị mặc định, quy tắc đơn giản).</li></ul>
+<h2>Các nền tảng phục vụ chuyên dụng</h2>
+<div class="tw"><table><tr><th>Công cụ</th><th>Ghi chú</th></tr><tr><td><b>MLflow Models</b></td><td><code>mlflow models serve -m models:/name@champion</code> dựng nhanh REST API</td></tr><tr><td><b>BentoML</b></td><td>Đóng gói mô hình thành dịch vụ có sẵn batching, Docker</td></tr><tr><td><b>KServe, Seldon Core</b></td><td>Phục vụ trên Kubernetes, tự co giãn, triển khai canary</td></tr><tr><td><b>TorchServe, TensorFlow Serving, Triton Inference Server</b></td><td>Tối ưu hiệu năng cho mô hình học sâu và GPU</td></tr><tr><td>Dịch vụ cloud</td><td>SageMaker, Vertex AI, Azure ML endpoints</td></tr><tr><td><b>ONNX Runtime</b></td><td>Chạy mô hình ở định dạng trung lập, nhanh và nhẹ</td></tr></table></div>
+<p>KServe trên Kubernetes:</p>
+<pre><code>apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: churn
+spec:
+  predictor:
+    minReplicas: 1
+    maxReplicas: 5
+    model:
+      modelFormat: {name: sklearn}
+      storageUri: s3://models/churn/1</code></pre>
+<p>Tính năng, tên trường và định dạng hỗ trợ thay đổi theo phiên bản: đối chiếu tài liệu.</p>
+<h2>Hiệu năng suy luận</h2>
+<div class="tw"><table><tr><th>Kỹ thuật</th><th>Tác dụng</th></tr><tr><td><b>Gộp yêu cầu (dynamic batching)</b></td><td>Tăng thông lượng, nhất là với GPU, đổi lại tăng độ trễ một chút</td></tr><tr><td><b>Lượng tử hoá, chưng cất, cắt tỉa</b></td><td>Giảm kích thước và độ trễ, đổi lại chút độ chính xác</td></tr><tr><td><b>Chuyển sang ONNX/TensorRT</b></td><td>Tối ưu cho phần cứng</td></tr><tr><td><b>Cache kết quả</b></td><td>Cho đầu vào lặp lại</td></tr><tr><td><b>Tính trước (batch) rồi tra cứu</b></td><td>Biến bài toán online thành tra cứu</td></tr><tr><td><b>Giảm đặc trưng tốn kém ở đường nóng</b></td><td>Đặc trưng cần truy vấn database làm chậm toàn bộ</td></tr></table></div>
+<p>Đo <b>p95 và p99</b> (không chỉ trung bình), và kiểm thử tải (<a href="https://tracviethustcs.github.io/devsecops-testing-notes/#performance-testing" target="_blank" rel="noopener">Kiểm thử hiệu năng</a>).</p>
+<h2>Đóng gói bằng container</h2>
+<pre><code>FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY serve.py model.joblib ./
+USER 10001
+EXPOSE 8000
+CMD ["uvicorn", "serve:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+<p>Phụ thuộc phải <b>khớp phiên bản</b> lúc huấn luyện (đặc biệt scikit-learn: mô hình lưu bằng một phiên bản có thể không tải được hoặc cho kết quả khác ở phiên bản khác). Ghim phiên bản, dùng cùng image nền cho huấn luyện và phục vụ (<a href="https://tracviethustcs.github.io/docker-container-notes/#build-best" target="_blank" rel="noopener">Dockerfile tốt</a>).</p>
+<h2>Bảo mật khi phục vụ</h2>
+<ul><li><b>Không tải mô hình từ nguồn không tin cậy</b> (pickle thực thi mã).</li><li><b>Xác thực và giới hạn tốc độ</b> API; mô hình có thể bị dò để đánh cắp hoặc tấn công đối nghịch.</li><li><b>Không trả thông tin nhạy cảm</b> về dữ liệu huấn luyện.</li><li>Quyền tối thiểu cho dịch vụ truy cập kho mô hình (<a href="https://tracviethustcs.github.io/docker-container-notes/#security" target="_blank" rel="noopener">Bảo mật container</a>).</li></ul>
+<div class="callout lab"><b>Dựng và gọi một dịch vụ dự đoán</b><pre><code>mkdir -p ~/serve-lab &amp;&amp; cd ~/serve-lab
+python3 - &lt;&lt;'EOF'
+import joblib
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+X, y = make_classification(n_samples=800, n_features=4, n_informative=3, n_redundant=0, random_state=0)
+joblib.dump(LogisticRegression(max_iter=500).fit(X, y), "model.joblib")
+EOF
+cat &gt; serve.py &lt;&lt;'EOF'
+import joblib, numpy as np
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+app = FastAPI(); model = joblib.load("model.joblib")
+class Features(BaseModel):
+    f0: float; f1: float; f2: float
+    tenure_months: int = Field(ge=0, le=600)
+@app.get("/healthz")
+def health(): return {"status": "ok"}
+@app.post("/predict")
+def predict(x: Features):
+    p = float(model.predict_proba(np.array([[x.f0, x.f1, x.f2, x.tenure_months]]))[0, 1])
+    return {"churn_probability": round(p, 4), "model_version": "1"}
+EOF
+uvicorn serve:app --port 8000 &gt;/dev/null 2&gt;&amp;1 &amp; sleep 3
+curl -s -X POST localhost:8000/predict -H 'content-type: application/json' -d '{"f0":0.1,"f1":-0.3,"f2":1.2,"tenure_months":14}'; echo
+curl -s -o /dev/null -w "đầu vào vô lý -&gt; HTTP %{http_code}\n" -X POST localhost:8000/predict -H 'content-type: application/json' -d '{"f0":0.1,"f1":-0.3,"f2":1.2,"tenure_months":-5}'
+kill $!</code></pre>
+<p>Quan sát: dự đoán và mã trả về với đầu vào vô lý là gì (kỳ vọng 422)? Bạn sẽ thêm gì để ghi log dự đoán phục vụ giám sát mà không lộ dữ liệu nhạy cảm?</p></div>
+</article>
+<article class="page" data-id="deploy-strategies" data-group="Sản xuất" data-title="Chiến lược triển khai mô hình" hidden>
+<h1>Chiến lược triển khai mô hình</h1>
+<p class="lead">Mô hình mới tốt ngoại tuyến chưa chắc tốt ở production. Triển khai dần với quan sát giúp biết chắc, và quay lui nhanh khi không như mong đợi.</p>
+<h2>Vì sao khác triển khai phần mềm thường</h2>
+<ul><li>Lỗi của mô hình <b>không gây lỗi</b> (không ngoại lệ, không mã 500): chỉ là <b>dự đoán kém</b> mà không ai thấy ngay.</li><li>Chất lượng phụ thuộc <b>dữ liệu thật</b>, không kiểm thử đầy đủ được trước.</li><li>Nhãn đúng thường <b>đến trễ</b>, nên phản hồi chậm.</li></ul>
+<p>Vì vậy triển khai mô hình cần chiến lược <b>quan sát trước, quyết định sau</b>, với chỉ số rõ ràng.</p>
+<h2>Các chiến lược</h2>
+<div class="tw"><table><tr><th>Chiến lược</th><th>Cách làm</th><th>Ưu</th><th>Lưu ý</th></tr><tr><td><b>Thay thế trực tiếp</b></td><td>Đổi bản mới cho mọi yêu cầu</td><td>Đơn giản</td><td>Rủi ro cao, không có tín hiệu trước</td></tr><tr><td><b>Shadow (bóng)</b></td><td>Bản mới nhận <b>bản sao</b> yêu cầu thật nhưng dự đoán <b>không được dùng</b>; so với bản hiện tại</td><td>An toàn tuyệt đối với người dùng; so sánh trên traffic thật</td><td>Tốn gấp đôi tài nguyên; chưa đo tác động nghiệp vụ</td></tr><tr><td><b>Canary</b></td><td>Bản mới phục vụ một phần nhỏ yêu cầu thật, tăng dần nếu ổn</td><td>Giới hạn rủi ro, đo được tác động thật</td><td>Cần chỉ số tốt, đủ lưu lượng</td></tr><tr><td><b>A/B test</b></td><td>Chia người dùng ngẫu nhiên hai nhóm (cũ, mới), so chỉ số nghiệp vụ có ý nghĩa thống kê</td><td>Bằng chứng nhân quả về tác động</td><td>Cần thiết kế thí nghiệm đúng, đủ mẫu và thời gian</td></tr><tr><td><b>Champion / challenger</b></td><td>Chạy nhiều ứng viên song song trên một phần traffic, chọn bản tốt nhất</td><td>Tìm bản tốt nhất liên tục</td><td>Phức tạp hơn</td></tr><tr><td><b>Bandit đa cánh</b></td><td>Tự điều chỉnh tỷ lệ traffic theo hiệu quả quan sát được</td><td>Giảm chi phí "thử nghiệm"</td><td>Khó phân tích hơn A/B</td></tr><tr><td><b>Interleaving</b> (xếp hạng)</td><td>Trộn kết quả của hai bản trong cùng một danh sách</td><td>Nhạy, cần ít mẫu</td><td>Chỉ cho hệ xếp hạng</td></tr></table></div>
+<pre class="ascii"><code>   Yêu cầu --&gt; Router --+--&gt; Mô hình CHAMPION  --&gt; dự đoán trả về người dùng
+                        |
+                        +--&gt; Mô hình CHALLENGER (shadow) --&gt; dự đoán chỉ GHI LẠI để so sánh
+                        |
+                        +--&gt; (canary: một phần nhỏ yêu cầu trả kết quả của challenger)</code></pre>
+<h2>Chỉ số để quyết định</h2>
+<div class="tw"><table><tr><th>Loại</th><th>Ví dụ</th></tr><tr><td><b>Sức khoẻ kỹ thuật</b></td><td>Độ trễ p95, tỷ lệ lỗi, tài nguyên</td></tr><tr><td><b>Chất lượng dự đoán</b></td><td>Phân phối điểm so với champion, tỷ lệ đồng thuận, chỉ số khi có nhãn</td></tr><tr><td><b>Nghiệp vụ</b></td><td>Tỷ lệ chuyển đổi, doanh thu, tỷ lệ khiếu nại, tỷ lệ gian lận bị chặn</td></tr><tr><td><b>Ràng buộc/công bằng</b></td><td>Chỉ số theo lát cắt không xấu đi</td></tr></table></div>
+<p>Quy tắc canary: định <b>ngưỡng dừng và quay lui tự động</b> trước (<a href="https://tracviethustcs.github.io/cicd-release-notes/#progressive-delivery" target="_blank" rel="noopener">Progressive delivery</a>). Với mô hình, chỉ số nghiệp vụ thường quan trọng hơn chỉ số kỹ thuật vì mô hình có thể chạy hoàn hảo về kỹ thuật mà dự đoán tệ.</p>
+<h2>A/B test mô hình: cẩn thận về thống kê</h2>
+<ul><li><b>Chia ngẫu nhiên theo đơn vị đúng</b> (người dùng, không phải yêu cầu) để một người luôn thấy cùng một bản.</li><li><b>Định kích thước mẫu và thời gian trước</b>, đừng "nhìn lén" kết quả rồi dừng khi thấy đẹp (tăng tỷ lệ kết luận sai).</li><li><b>Một chỉ số chính</b> quyết định, các chỉ số phụ để quan sát.</li><li>Chú ý <b>hiệu ứng mới lạ</b> (người dùng phản ứng khác với thứ mới) và tính <b>mùa vụ</b>.</li><li>Thí nghiệm có thể <b>ảnh hưởng lẫn nhau</b> nếu chạy nhiều cái cùng lúc trên cùng người dùng.</li></ul>
+<h2>Triển khai và quay lui</h2>
+<ul><li>Triển khai là <b>đổi con trỏ</b> (bí danh trong registry, trọng số trong router), nên quay lui nhanh (<a href="#registry">Registry</a>).</li><li>Giữ <b>phiên bản cũ luôn sẵn sàng</b> phục vụ.</li><li><b>Đặt phiên bản mô hình và phiên bản mã/đặc trưng cùng nhau</b>: mô hình mới có thể cần đặc trưng mới; hai thứ phải triển khai tương thích (<a href="https://tracviethustcs.github.io/cicd-release-notes/#deploy-strategies" target="_blank" rel="noopener">Chiến lược phát hành</a>).</li><li>Cho <b>phương án dự phòng (fallback)</b>: khi mô hình lỗi hoặc quá chậm, dùng quy tắc đơn giản thay vì làm hỏng dịch vụ.</li><li>Với mô hình học liên tục, cẩn thận <b>vòng phản hồi</b>: mô hình ảnh hưởng dữ liệu về sau của chính nó.</li></ul>
+<div class="callout lab"><b>Mô phỏng shadow so sánh hai mô hình</b><pre><code>python3 - &lt;&lt;'EOF'
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
+X, y = make_classification(n_samples=6000, n_features=12, n_informative=5, random_state=5)
+Xtr, Xlive, ytr, ylive = train_test_split(X, y, test_size=0.5, random_state=5)
+champion = LogisticRegression(max_iter=1000).fit(Xtr, ytr)
+challenger = GradientBoostingClassifier(random_state=5).fit(Xtr, ytr)
+
+<span class="cm"># "traffic thật": cả hai dự đoán; chỉ champion trả về người dùng</span>
+pc, pn = champion.predict_proba(Xlive)[:, 1], challenger.predict_proba(Xlive)[:, 1]
+agree = np.mean((pc &gt; 0.5) == (pn &gt; 0.5))
+print("tỷ lệ đồng thuận quyết định:", round(agree, 3))
+print("điểm trung bình champion/challenger:", round(pc.mean(), 3), round(pn.mean(), 3))
+<span class="cm"># nhãn đến trễ: sau đó mới so sánh chất lượng</span>
+from sklearn.metrics import roc_auc_score
+print("AUC khi nhãn về: champion", round(roc_auc_score(ylive, pc), 3), "challenger", round(roc_auc_score(ylive, pn), 3))
+EOF</code></pre>
+<p>Nếu tỷ lệ đồng thuận thấp, challenger đang làm điều gì rất khác? Bạn sẽ chờ tối thiểu bao lâu (nhãn về) trước khi chuyển sang canary, và ngưỡng dừng nào bạn đặt trước?</p></div>
+</article>
+<article class="page" data-id="monitoring-drift" data-group="Sản xuất" data-title="Giám sát và phát hiện drift" hidden>
+<h1>Giám sát và phát hiện drift</h1>
+<p class="lead">Mô hình suy giảm mà không báo lỗi. Giám sát học máy nhìn vào dữ liệu vào, dự đoán và (khi có) kết quả thật, để phát hiện suy giảm trước khi người dùng phát hiện.</p>
+<h2>Các loại thay đổi làm mô hình suy giảm</h2>
+<div class="tw"><table><tr><th>Loại</th><th>Ý nghĩa</th><th>Ví dụ</th></tr><tr><td><b>Data drift / covariate shift</b></td><td><b>Phân phối đầu vào</b> đổi</td><td>Người dùng trẻ hơn trước, thiết bị mới, thay đổi ở nguồn dữ liệu</td></tr><tr><td><b>Concept drift</b></td><td><b>Quan hệ giữa đầu vào và đáp án</b> đổi</td><td>Hành vi gian lận đổi, dịch bệnh làm thói quen mua sắm khác</td></tr><tr><td><b>Label / prior shift</b></td><td>Tỷ lệ các lớp đổi</td><td>Tỷ lệ khách rời bỏ tăng</td></tr><tr><td><b>Thay đổi ở pipeline dữ liệu</b></td><td>Đặc trưng bị tính sai, đơn vị đổi, cột mới rỗng</td><td>Lỗi, không phải drift thật: <b>nguyên nhân hay gặp nhất</b></td></tr><tr><td><b>Training-serving skew</b></td><td>Đặc trưng lúc phục vụ khác lúc huấn luyện</td><td>Xem <a href="#data-features">Dữ liệu và đặc trưng</a></td></tr></table></div>
+<p>Trước khi kết luận "drift", <b>loại trừ lỗi pipeline dữ liệu</b>: nhiều "drift" thật ra là cột bị thiếu hay đổi đơn vị.</p>
+<h2>Cần giám sát những gì</h2>
+<pre class="ascii"><code>   Dữ liệu vào  -&gt;  [ MÔ HÌNH ]  -&gt;  Dự đoán  -&gt;  (sau một thời gian) Kết quả thật / nhãn
+        |                              |                       |
+   drift đặc trưng,              phân phối điểm,        hiệu năng thật (AUC, lỗi),
+   thiếu, ngoài miền             tỷ lệ lớp dự đoán      so với lúc huấn luyện
+        +---- cùng với: sức khoẻ dịch vụ (độ trễ, lỗi, tài nguyên), chỉ số nghiệp vụ ----+</code></pre>
+<div class="tw"><table><tr><th>Tầng</th><th>Chỉ số</th><th>Nhãn cần?</th></tr><tr><td><b>Sức khoẻ dịch vụ</b></td><td>Độ trễ, tỷ lệ lỗi, lưu lượng, tài nguyên</td><td>Không</td></tr><tr><td><b>Chất lượng dữ liệu vào</b></td><td>Tỷ lệ thiếu, ngoài miền, kiểu sai, độ tươi</td><td>Không</td></tr><tr><td><b>Drift đầu vào</b></td><td>So sánh phân phối từng đặc trưng với tập huấn luyện</td><td>Không</td></tr><tr><td><b>Drift dự đoán</b></td><td>Phân phối điểm, tỷ lệ dự đoán dương</td><td>Không</td></tr><tr><td><b>Hiệu năng thật</b></td><td>AUC, precision/recall, lỗi dự báo</td><td><b>Có</b> (thường đến trễ)</td></tr><tr><td><b>Nghiệp vụ</b></td><td>Chuyển đổi, doanh thu, khiếu nại</td><td>Không</td></tr></table></div>
+<p>Khi <b>nhãn đến trễ</b> (vài tuần hoặc vài tháng), giám sát drift đầu vào và dự đoán là <b>cảnh báo sớm</b>, còn hiệu năng thật xác nhận sau.</p>
+<h2>Đo drift</h2>
+<div class="tw"><table><tr><th>Phương pháp</th><th>Dùng cho</th><th>Ghi chú</th></tr><tr><td><b>PSI (Population Stability Index)</b></td><td>Đặc trưng số và phân loại (sau khi chia khoảng)</td><td>Quy ước hay dùng: dưới 0,1 ổn định; 0,1 đến 0,25 thay đổi vừa; trên 0,25 thay đổi đáng kể</td></tr><tr><td><b>Kiểm định Kolmogorov-Smirnov (KS)</b></td><td>Đặc trưng số liên tục</td><td>Cho p-value; rất nhạy khi mẫu lớn</td></tr><tr><td><b>Chi-bình phương</b></td><td>Đặc trưng phân loại</td><td>So tần suất các giá trị</td></tr><tr><td><b>Khoảng cách Jensen-Shannon, Wasserstein</b></td><td>So sánh phân phối</td><td>Đo "mức khác nhau"</td></tr><tr><td><b>Phân loại miền (domain classifier)</b></td><td>Nhiều đặc trưng cùng lúc</td><td>Huấn luyện mô hình phân biệt "huấn luyện" với "sản xuất"; AUC cao nghĩa là phân phối khác nhau</td></tr></table></div>
+<pre><code>import numpy as np
+
+def psi(expected, actual, bins=10):
+    edges = np.quantile(expected, np.linspace(0, 1, bins + 1))
+    edges[0], edges[-1] = -np.inf, np.inf
+    e = np.histogram(expected, edges)[0] / len(expected)
+    a = np.histogram(actual, edges)[0] / len(actual)
+    e, a = np.clip(e, 1e-6, None), np.clip(a, 1e-6, None)        # tránh chia cho 0
+    return float(np.sum((a - e) * np.log(a / e)))</code></pre>
+<p>Các ngưỡng là quy ước kinh nghiệm, không phải quy luật: hiệu chỉnh theo từng đặc trưng và theo tác động lên mô hình. <b>Drift trong một đặc trưng không quan trọng với mô hình thì không đáng báo động</b>; ưu tiên đặc trưng có tầm quan trọng cao.</p>
+<p>Công cụ: <b>Evidently</b>, <b>WhyLabs/whylogs</b>, <b>NannyML</b>, các tính năng giám sát của SageMaker, Vertex AI, Arize, Fiddler.</p>
+<h2>Ghi log để giám sát</h2>
+<p>Dịch vụ phục vụ cần ghi lại (có kiểm soát PII và chi phí lưu trữ):</p>
+<ul><li><b>Đặc trưng đầu vào</b> (hoặc mẫu), <b>dự đoán</b>, <b>phiên bản mô hình</b>, thời điểm, mã định danh yêu cầu.</li><li>Một <b>khoá liên kết</b> để sau này ghép với <b>nhãn thật</b> khi nó về.</li></ul>
+<p>Mẫu hợp lý nếu lưu lượng quá lớn (lấy mẫu có hệ thống, nhưng luôn giữ các trường hợp bất thường).</p>
+<h2>Cảnh báo và hành động</h2>
+<div class="tw"><table><tr><th>Phát hiện</th><th>Hành động</th></tr><tr><td>Lỗi pipeline dữ liệu (cột rỗng, đơn vị đổi)</td><td>Sửa nguồn; có thể tạm quay lui hoặc dùng phương án dự phòng</td></tr><tr><td>Drift đầu vào vượt ngưỡng ở đặc trưng quan trọng</td><td>Điều tra nguyên nhân; chuẩn bị học lại</td></tr><tr><td>Phân phối dự đoán đổi mạnh</td><td>Điều tra; kiểm tra tiền xử lý</td></tr><tr><td>Hiệu năng thật giảm dưới ngưỡng</td><td>Quay lui về bản trước hoặc học lại và triển khai bản mới</td></tr><tr><td>Chỉ số nghiệp vụ xấu đi</td><td>Điều tra theo cả nhóm: mô hình, dữ liệu, thay đổi sản phẩm</td></tr></table></div>
+<p><b>Học lại tự động khi drift</b> là tuỳ chọn có sẵn nhưng phải kèm cổng chất lượng (<a href="#pipelines">Pipeline</a>, <a href="#evaluation">Đánh giá</a>): học lại trên dữ liệu đang lỗi sẽ tạo mô hình lỗi.</p>
+<p>Định <b>SLO</b> cho mô hình (ví dụ "AUC trên 0,78 trong cửa sổ 30 ngày, p95 độ trễ dưới 80 ms") và đo như mọi dịch vụ khác.</p>
+<div class="callout lab"><b>Phát hiện drift bằng PSI và KS</b><pre><code>python3 - &lt;&lt;'EOF'
+import numpy as np
+from scipy.stats import ks_2samp
+
+def psi(expected, actual, bins=10):
+    edges = np.quantile(expected, np.linspace(0, 1, bins + 1)); edges[0], edges[-1] = -np.inf, np.inf
+    e = np.clip(np.histogram(expected, edges)[0] / len(expected), 1e-6, None)
+    a = np.clip(np.histogram(actual, edges)[0] / len(actual), 1e-6, None)
+    return float(np.sum((a - e) * np.log(a / e)))
+
+rng = np.random.default_rng(0)
+train = rng.normal(40, 10, 20000)                 # tuổi lúc huấn luyện
+stable = rng.normal(40, 10, 5000)                 # tuần này, không đổi
+drifted = rng.normal(46, 12, 5000)                # tuần này, người dùng già hơn và phân tán hơn
+broken = np.where(rng.random(5000) &lt; 0.3, np.nan, rng.normal(40, 10, 5000))   # 30% thiếu (lỗi pipeline)
+
+print("PSI ổn định :", round(psi(train, stable), 4))
+print("PSI drift   :", round(psi(train, drifted), 4))
+print("KS drift p  :", ks_2samp(train, drifted).pvalue)
+print("tỷ lệ NULL ở dữ liệu lỗi:", round(float(np.isnan(broken).mean()), 3), "&lt;- bắt bằng kiểm tra chất lượng, không phải PSI")
+EOF</code></pre>
+<p>PSI của bản ổn định và bản lệch khác nhau ra sao so với ngưỡng 0,1 và 0,25? Vì sao với mẫu rất lớn p-value của KS gần như luôn "có ý nghĩa", và bạn sẽ dùng độ lớn của PSI thay vì chỉ p-value như thế nào?</p></div>
+</article>
+<article class="page" data-id="ci-cd-ct" data-group="Tự động hoá" data-title="CI/CD/CT và kiểm thử học máy" hidden>
+<h1>CI/CD/CT và kiểm thử học máy</h1>
+<p class="lead">Hệ thống học máy cần ba vòng tự động hoá: CI kiểm tra mã và dữ liệu, CD triển khai mô hình và dịch vụ, và CT (huấn luyện liên tục) làm mới mô hình khi dữ liệu thay đổi. Kèm theo là bộ kiểm thử riêng cho dữ liệu và mô hình.</p>
+<h2>Ba vòng tự động hoá</h2>
+<div class="tw"><table><tr><th>Vòng</th><th>Kích hoạt</th><th>Làm gì</th><th>Sản phẩm</th></tr><tr><td><b>CI</b> (Continuous Integration)</td><td>Commit, pull request</td><td>Kiểm tra mã, kiểm thử đơn vị, kiểm tra dữ liệu mẫu, huấn luyện thử nhỏ</td><td>PR xanh hoặc đỏ</td></tr><tr><td><b>CT</b> (Continuous Training)</td><td>Lịch, dữ liệu mới, drift, hiệu năng giảm</td><td>Chạy pipeline huấn luyện đầy đủ, đánh giá, đăng ký nếu qua cổng</td><td>Phiên bản mô hình mới trong registry</td></tr><tr><td><b>CD</b> (Continuous Delivery/Deployment)</td><td>Mô hình mới đạt cổng, hoặc mã dịch vụ đổi</td><td>Đóng gói, triển khai dần (shadow, canary), quay lui nếu xấu</td><td>Mô hình/dịch vụ chạy ở production</td></tr></table></div>
+<pre class="ascii"><code>   CODE đổi --&gt; CI: lint, test mã, test dữ liệu mẫu, train thử ---&gt; merge
+                                                                      |
+   DỮ LIỆU mới / lịch / drift --&gt; CT: train đầy đủ -&gt; đánh giá -&gt; CỔNG -&gt; đăng ký phiên bản mới
+                                                                      |
+                                                  CD: shadow -&gt; canary -&gt; champion; giám sát; quay lui</code></pre>
+<p>Điểm khác với phần mềm thường: <b>ba thứ có thể kích hoạt</b> (mã, dữ liệu, thời gian/drift), và một phiên bản triển khai là bộ ba <b>mã + dữ liệu + mô hình</b>, không chỉ mã.</p>
+<h2>Các loại kiểm thử trong ML</h2>
+<div class="tw"><table><tr><th>Nhóm</th><th>Kiểm tra</th><th>Ví dụ</th></tr><tr><td><b>Mã</b></td><td>Hàm tiền xử lý, đặc trưng chạy đúng</td><td>Kiểm thử đơn vị với đầu vào mẫu nhỏ</td></tr><tr><td><b>Dữ liệu</b></td><td>Schema, miền, thiếu, phân phối, nhãn</td><td>Pandera, Great Expectations (<a href="#data-features">Dữ liệu và đặc trưng</a>)</td></tr><tr><td><b>Pipeline</b></td><td>Cả pipeline chạy được từ đầu đến cuối trên dữ liệu nhỏ</td><td>"Smoke test" huấn luyện vài giây</td></tr><tr><td><b>Mô hình: chỉ số</b></td><td>Đạt ngưỡng, không tệ hơn champion</td><td>Cổng chất lượng (<a href="#evaluation">Đánh giá</a>)</td></tr><tr><td><b>Mô hình: lát cắt, công bằng</b></td><td>Không quá tệ ở nhóm nào</td><td>Đánh giá theo lát cắt</td></tr><tr><td><b>Mô hình: hành vi</b></td><td>Bất biến, hướng mong đợi, ca biên, hồi quy</td><td>Kiểm thử hành vi</td></tr><tr><td><b>Xác định/tái lập</b></td><td>Cùng hạt giống cho cùng kết quả</td><td>Chạy hai lần so sánh</td></tr><tr><td><b>Phục vụ</b></td><td>API đúng schema, độ trễ, đầu vào sai</td><td>Kiểm thử API, kiểm thử tải</td></tr><tr><td><b>Tương thích</b></td><td>Mô hình tải được ở môi trường phục vụ; đặc trưng khớp</td><td>Tải mô hình trong container phục vụ</td></tr></table></div>
+<pre><code><span class="cm"># tests/test_model_contract.py</span>
+import joblib, numpy as np, pytest
+
+@pytest.fixture(scope="module")
+def model():
+    return joblib.load("models/model.joblib")
+
+def test_dau_ra_la_xac_suat_hop_le(model):
+    p = model.predict_proba(np.random.RandomState(0).randn(50, 10))[:, 1]
+    assert ((p &gt;= 0) &amp; (p &lt;= 1)).all()
+
+def test_xac_dinh_voi_cung_dau_vao(model):
+    x = np.random.RandomState(1).randn(20, 10)
+    assert np.allclose(model.predict_proba(x), model.predict_proba(x))
+
+def test_khong_te_hon_duong_co_so():
+    import json
+    m = json.load(open("metrics.json"))
+    assert m["auc"] &gt; 0.65                                  # phải thắng mô hình ngây thơ rõ rệt</code></pre>
+<h2>Workflow CI cho dự án ML</h2>
+<pre><code>name: ml-ci
+on:
+  pull_request:
+    paths: ["src/**", "tests/**", "params.yaml", "dvc.yaml", "requirements.txt"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt
+      - run: ruff check src tests                          # lint
+      - run: pytest tests/unit -q                          # mã và đặc trưng
+      - run: python src/validate_data.py data/sample.csv   # kiểm tra dữ liệu mẫu nhỏ
+      - run: dvc repro --single-item smoke_train           # huấn luyện thử vài giây trên mẫu nhỏ
+      - run: pytest tests/model -q                         # kiểm thử mô hình vừa huấn luyện thử</code></pre>
+<p>Giữ CI <b>nhanh</b> (vài phút): kiểm tra trên <b>mẫu nhỏ</b>, không huấn luyện đầy đủ. Huấn luyện đầy đủ thuộc về CT.</p>
+<h2>CT: huấn luyện liên tục an toàn</h2>
+<ul><li><b>Kích hoạt</b> theo lịch, dữ liệu mới hoặc cảnh báo drift (<a href="#monitoring-drift">Giám sát</a>).</li><li><b>Kiểm tra dữ liệu trước</b>, dừng nếu xấu.</li><li><b>Đánh giá và cổng</b> so với champion; <b>không tự động triển khai</b> thứ chưa qua cổng.</li><li>Mô hình mới thành <b>challenger</b> trong registry, rồi triển khai dần (<a href="#deploy-strategies">Chiến lược triển khai</a>).</li><li>Với rủi ro cao: <b>bước duyệt của con người</b> giữa CT và CD.</li><li>Ghi lại mọi thứ vào theo dõi thí nghiệm để truy vết.</li><li>Cẩn thận <b>vòng phản hồi</b> và <b>học lại trên dữ liệu nhiễm lỗi hoặc bị đầu độc</b>.</li></ul>
+<h2>CD cho mô hình</h2>
+<div class="tw"><table><tr><th>Việc</th><th>Cách làm</th></tr><tr><td>Đóng gói</td><td>Container có mô hình hoặc dịch vụ tải theo bí danh (<code>@champion</code>)</td></tr><tr><td>Triển khai</td><td>GitOps: cập nhật tham chiếu phiên bản trong repo cấu hình (<a href="https://tracviethustcs.github.io/cicd-release-notes/#gitops-cd" target="_blank" rel="noopener">GitOps</a>)</td></tr><tr><td>Phát hành dần</td><td>Shadow, canary với cổng tự động</td></tr><tr><td>Quay lui</td><td>Đổi con trỏ phiên bản; giữ bản cũ sẵn sàng</td></tr><tr><td>Kiểm tra sau triển khai</td><td>Smoke test dự đoán, kiểm tra sức khoẻ, so sánh với champion</td></tr></table></div>
+<p>Mã dịch vụ phục vụ (ít đổi) và <b>mô hình</b> (đổi thường xuyên) nên có <b>vòng đời tách nhau</b>: cập nhật mô hình không cần triển khai lại mã dịch vụ.</p>
+<h2>Chỉ số của quy trình MLOps</h2>
+<div class="tw"><table><tr><th>Chỉ số</th><th>Cho biết</th></tr><tr><td>Thời gian từ dữ liệu mới đến mô hình mới ở production</td><td>Tốc độ làm mới</td></tr><tr><td>Số lần huấn luyện lại thành công / thất bại, lý do</td><td>Độ tin cậy pipeline</td></tr><tr><td>Thời gian phát hiện suy giảm và thời gian khắc phục</td><td>Mức nhạy của giám sát</td></tr><tr><td>Tỷ lệ mô hình bị quay lui</td><td>Chất lượng cổng và triển khai</td></tr><tr><td>Tỷ lệ mô hình có tài liệu, người chịu trách nhiệm, giám sát</td><td>Mức trưởng thành</td></tr></table></div>
+<div class="callout lab"><b>Bộ kiểm thử hợp đồng cho mô hình</b><pre><code>mkdir -p ~/mltest/tests &amp;&amp; cd ~/mltest
+python3 - &lt;&lt;'EOF'
+import joblib, json
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+X, y = make_classification(n_samples=1500, n_features=10, n_informative=4, random_state=0)
+Xtr, Xte, ytr, yte = train_test_split(X, y, random_state=0)
+m = RandomForestClassifier(n_estimators=80, random_state=0).fit(Xtr, ytr)
+joblib.dump(m, "model.joblib"); json.dump({"auc": roc_auc_score(yte, m.predict_proba(Xte)[:, 1])}, open("metrics.json", "w"))
+EOF
+cat &gt; tests/test_model.py &lt;&lt;'EOF'
+import joblib, json, numpy as np
+m = joblib.load("model.joblib")
+def test_xac_suat_hop_le():
+    p = m.predict_proba(np.random.RandomState(0).randn(50, 10))[:, 1]
+    assert ((p &gt;= 0) &amp; (p &lt;= 1)).all()
+def test_xac_dinh():
+    x = np.random.RandomState(1).randn(20, 10)
+    assert np.allclose(m.predict_proba(x), m.predict_proba(x))
+def test_thang_duong_co_so():
+    assert json.load(open("metrics.json"))["auc"] &gt; 0.7
+def test_bat_bien_voi_dac_trung_khong_dung_den():
+    x = np.random.RandomState(2).randn(30, 10)
+    y = x.copy(); y[:, 9] += 5          # đặc trưng f9 có thể ít quan trọng: kiểm tra mức nhạy
+    d = np.abs(m.predict_proba(x)[:, 1] - m.predict_proba(y)[:, 1]).mean()
+    assert d &lt; 0.5
+EOF
+pip install -q pytest &amp;&amp; pytest -q</code></pre>
+<p>Bài tập: thêm một kiểm thử mà bạn tin sẽ bắt được lỗi "huấn luyện nhầm dữ liệu rỗng" hoặc "đặc trưng đổi thứ tự cột". Kiểm thử nào của bạn sẽ đỏ nếu ai đó vô tình đổi thứ tự cột đầu vào?</p></div>
+</article>
+<article class="page" data-id="infra-cost" data-group="Tự động hoá" data-title="Hạ tầng, GPU và chi phí" hidden>
+<h1>Hạ tầng, GPU và chi phí</h1>
+<p class="lead">Học máy tiêu tốn tài nguyên theo cách khác dịch vụ web: huấn luyện nặng và gián đoạn, suy luận cần phần cứng đặc biệt. Quản lý hạ tầng và chi phí tốt quyết định dự án có bền vững không.</p>
+<h2>Huấn luyện và suy luận khác nhau</h2>
+<div class="tw"><table><tr><th></th><th>Huấn luyện</th><th>Suy luận (phục vụ)</th></tr><tr><td>Tải</td><td>Nặng, <b>gián đoạn</b> (chạy hàng giờ rồi dừng)</td><td>Liên tục hoặc theo lưu lượng</td></tr><tr><td>Ưu tiên</td><td>Thông lượng, tận dụng phần cứng</td><td>Độ trễ, độ sẵn sàng</td></tr><tr><td>Tài nguyên</td><td>CPU/GPU lớn, bộ nhớ lớn, lưu trữ dữ liệu</td><td>Thường nhỏ hơn, đôi khi cần GPU</td></tr><tr><td>Co giãn</td><td>Dựng khi cần rồi tắt</td><td>Co giãn theo lưu lượng</td></tr><tr><td>Chịu lỗi</td><td>Checkpoint để tiếp tục</td><td>Nhiều bản sao, health check</td></tr></table></div>
+<p>Nhiều mô hình cổ điển (cây quyết định, hồi quy) chạy tốt trên CPU. <b>Đừng mặc định dùng GPU</b>: chỉ khi mô hình học sâu thật sự cần.</p>
+<h2>GPU trên Kubernetes</h2>
+<p>Kubernetes quản lý GPU qua <b>device plugin</b> (ví dụ của NVIDIA), khai báo như một loại tài nguyên:</p>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata: {name: train-job}
+spec:
+  restartPolicy: Never
+  nodeSelector: {accelerator: nvidia-gpu}
+  tolerations:
+    - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
+  containers:
+    - name: train
+      image: registry.example.com/ml/train:1.2.0
+      resources:
+        limits:
+          nvidia.com/gpu: 1            # GPU chỉ khai báo trong limits, và là số nguyên
+          memory: 32Gi
+        requests:
+          cpu: "8"
+          memory: 32Gi</code></pre>
+<ul><li>GPU thường <b>không chia nhỏ mặc định</b> (một Pod một GPU nguyên); có kỹ thuật chia sẻ (time-slicing, MIG) với đánh đổi riêng.</li><li>Đặt <b>taint</b> cho node GPU và <code>toleration</code> cho Pod cần GPU để workload thường không chiếm máy đắt tiền (<a href="https://tracviethustcs.github.io/k8s-study-notes/#scheduling" target="_blank" rel="noopener">Scheduling</a>).</li><li><b>Job</b> cho huấn luyện (chạy xong là giải phóng), <b>Deployment</b> cho phục vụ (<a href="https://tracviethustcs.github.io/k8s-study-notes/#obj-batch" target="_blank" rel="noopener">Job, CronJob</a>).</li><li>Đặt <code>requests</code> và <code>limits</code> bộ nhớ hợp lý để tránh OOM giữa chừng (<a href="https://tracviethustcs.github.io/k8s-study-notes/#ops-resources" target="_blank" rel="noopener">Tài nguyên</a>).</li></ul>
+<h2>Giảm chi phí huấn luyện</h2>
+<div class="tw"><table><tr><th>Kỹ thuật</th><th>Mô tả</th><th>Đánh đổi</th></tr><tr><td><b>Spot / preemptible</b></td><td>Dùng máy giá rẻ có thể bị thu hồi bất kỳ lúc</td><td>Cần <b>checkpoint</b> và khả năng tiếp tục</td></tr><tr><td><b>Checkpointing</b></td><td>Lưu trạng thái định kỳ để tiếp tục khi bị ngắt</td><td>Thêm I/O</td></tr><tr><td><b>Dừng sớm</b></td><td>Dừng huấn luyện khi chỉ số không cải thiện</td><td>Cần tập kiểm định đáng tin</td></tr><tr><td><b>Thí nghiệm nhỏ trước</b></td><td>Thử trên mẫu và mô hình nhỏ rồi mới mở rộng</td><td>Phải đại diện đủ</td></tr><tr><td><b>Mixed precision, tối ưu batch</b></td><td>Tận dụng GPU tốt hơn</td><td>Cần kiểm tra ổn định số học</td></tr><tr><td><b>Cache đặc trưng, tiền xử lý</b></td><td>Không tính lại</td><td>Quản lý cache</td></tr><tr><td><b>Tắt tài nguyên rảnh</b></td><td>Tự động tắt cụm, notebook bỏ quên</td><td>Kỷ luật vận hành</td></tr><tr><td><b>Chọn kích thước phù hợp</b></td><td>Mô hình lớn hơn không phải lúc nào cũng đáng</td><td>Cần đo lợi ích</td></tr></table></div>
+<h2>Giảm chi phí suy luận</h2>
+<ul><li><b>Batch thay online</b> khi độ trễ không bắt buộc.</li><li><b>Lượng tử hoá, chưng cất mô hình, ONNX</b> để chạy rẻ hơn, nhanh hơn.</li><li><b>Co giãn theo lưu lượng</b> và co về nhỏ khi vắng; <b>gộp nhiều mô hình lên một máy</b> nếu phù hợp.</li><li><b>Cache dự đoán</b> cho đầu vào lặp lại.</li><li><b>Mô hình nhỏ làm bộ lọc trước</b>, mô hình lớn chỉ xử lý ca khó.</li></ul>
+<h2>Môi trường và tái lập</h2>
+<ul><li><b>Container hoá</b> môi trường huấn luyện và phục vụ, ghim phiên bản thư viện và driver (CUDA), vì lệch phiên bản gây lỗi khó đoán (<a href="https://tracviethustcs.github.io/docker-container-notes/" target="_blank" rel="noopener">Docker</a>).</li><li>Mô tả hạ tầng bằng mã (Terraform, Helm) để dựng lại (<a href="https://tracviethustcs.github.io/iac-terraform-ansible-notes/" target="_blank" rel="noopener">IaC</a>).</li><li><b>Dữ liệu gần tính toán</b> (cùng vùng) để tránh phí truyền và độ trễ.</li></ul>
+<h2>Theo dõi và kiểm soát chi phí</h2>
+<div class="tw"><table><tr><th>Biện pháp</th><th>Mô tả</th></tr><tr><td><b>Gắn thẻ chi phí</b></td><td>Theo dự án, mô hình, người, môi trường</td></tr><tr><td><b>Ngân sách và cảnh báo</b></td><td>Cảnh báo khi vượt, giới hạn cứng cho thí nghiệm</td></tr><tr><td><b>Đo chi phí mỗi lần huấn luyện, mỗi dự đoán</b></td><td>Biết đơn vị chi phí để quyết định đánh đổi</td></tr><tr><td><b>Hạn mức theo nhóm</b></td><td>Quota GPU, ResourceQuota (<a href="https://tracviethustcs.github.io/k8s-study-notes/#ops-resources" target="_blank" rel="noopener">Tài nguyên</a>)</td></tr><tr><td><b>Rà soát tài nguyên bỏ quên</b></td><td>Notebook, máy GPU, điểm cuối suy luận không còn dùng</td></tr></table></div>
+<p>Xem thêm về công cụ như OpenCost (<a href="https://tracviethustcs.github.io/k8s-study-notes/#tool-observe" target="_blank" rel="noopener">Giám sát và add-on</a>).</p>
+<div class="callout lab"><b>Ước tính chi phí và quyết định batch hay online</b><p>Điền số giả định cho một mô hình của bạn rồi so sánh:</p>
+<div class="tw"><table><tr><th></th><th>Online</th><th>Batch</th></tr><tr><td>Số dự đoán mỗi ngày</td><td>2.000.000</td><td>2.000.000</td></tr><tr><td>Tài nguyên</td><td>2 máy luôn bật (24/7)</td><td>1 máy chạy 1 giờ mỗi đêm</td></tr><tr><td>Chi phí máy mỗi giờ (giả định)</td><td>0,5</td><td>0,5</td></tr></table></div>
+<ol><li>Tính chi phí máy mỗi ngày của hai cách. Chi phí mỗi triệu dự đoán là bao nhiêu?</li><li>Với bài toán nào độ trễ vài giờ là chấp nhận được (khiến batch hợp lý)? Với bài toán nào thì không?</li><li>Bạn sẽ dùng spot cho huấn luyện nhưng không dùng cho phục vụ online: vì sao, và cần chuẩn bị gì?</li></ol></div>
+</article>
+<article class="page" data-id="governance" data-group="Tự động hoá" data-title="Quản trị mô hình và học máy có trách nhiệm" hidden>
+<h1>Quản trị mô hình và học máy có trách nhiệm</h1>
+<p class="lead">Mô hình đưa ra quyết định ảnh hưởng đến con người. Quản trị bảo đảm mô hình được ghi chép, kiểm soát, giám sát về thiên lệch, và có người chịu trách nhiệm khi nó sai.</p>
+<div class="callout warn"><b>Đây không phải tư vấn pháp lý</b><p>Quy định về AI và dữ liệu (như đạo luật AI của EU phân loại theo mức rủi ro, các luật bảo vệ dữ liệu cá nhân) đang phát triển và khác nhau theo khu vực và lĩnh vực. Nội dung dưới đây là khung kỹ thuật và quy trình tham khảo; hãy làm việc với bộ phận pháp lý, tuân thủ và rủi ro của tổ chức cho yêu cầu cụ thể.</p></div>
+<h2>Tài liệu: model card và datasheet</h2>
+<div class="tw"><table><tr><th>Tài liệu</th><th>Nội dung</th></tr><tr><td><b>Model card</b></td><td>Mục đích sử dụng và <b>không</b> nên dùng; dữ liệu huấn luyện; chỉ số tổng và theo lát cắt; hạn chế đã biết; cân nhắc đạo đức; người chịu trách nhiệm</td></tr><tr><td><b>Datasheet cho tập dữ liệu</b></td><td>Nguồn gốc, cách thu thập, gán nhãn, khoảng thời gian, thiên lệch đã biết, giấy phép, quyền riêng tư</td></tr></table></div>
+<p>Một model card ngắn nhưng trung thực đáng giá hơn tài liệu dài không ai đọc. Đặt nó <b>cạnh mô hình trong registry</b>, cập nhật mỗi phiên bản.</p>
+<pre><code><span class="cm"># Model card (rút gọn)</span>
+Tên: churn-model v7                 Chủ sở hữu: nhóm Khách hàng (an@example.com)
+Mục đích: xếp hạng khách có nguy cơ rời bỏ để ưu tiên chăm sóc. KHÔNG dùng để quyết định giá hay từ chối dịch vụ.
+Dữ liệu huấn luyện: bảng silver.customers_v3, 2025-01 đến 2026-06, đã loại khách thử nghiệm.
+Chỉ số (test, thời gian): AUC 0,81 tổng; thấp nhất 0,74 ở nhóm khách mới (n=3.200).
+Hạn chế: kém với khách dưới 1 tháng; chưa kiểm thử cho thị trường mới.
+Giám sát: PSI hàng tuần; AUC hàng tháng khi nhãn về; kích hoạt học lại khi AUC &lt; 0,76.</code></pre>
+<h2>Kiểm soát thiên lệch và công bằng</h2>
+<ul><li>Đo chỉ số <b>theo nhóm</b> (nếu phù hợp pháp lý và đạo đức) và theo dõi theo thời gian (<a href="#evaluation">Đánh giá</a>).</li><li>Xem xét <b>thiên lệch trong dữ liệu</b> (mẫu không đại diện, nhãn phản ánh quyết định thiên lệch trong quá khứ) vì mô hình học và có thể khuếch đại nó.</li><li><b>Đặc trưng đại diện (proxy)</b>: bỏ thuộc tính nhạy cảm chưa chắc hết thiên lệch nếu còn đặc trưng tương quan chặt (mã bưu chính).</li><li>Chọn tiêu chí công bằng là <b>quyết định nghiệp vụ và đạo đức</b> có sự tham gia của người có thẩm quyền, không chỉ kỹ sư.</li></ul>
+<h2>Giải thích được</h2>
+<p>Tuỳ rủi ro, cần mức giải thích khác nhau:</p>
+<div class="tw"><table><tr><th>Công cụ/Cách</th><th>Ghi chú</th></tr><tr><td>Mô hình <b>tự giải thích</b> (tuyến tính, cây nhỏ)</td><td>Dễ giải thích nhất; đánh đổi một phần độ chính xác</td></tr><tr><td><b>Tầm quan trọng đặc trưng</b>, SHAP, LIME</td><td>Giải thích hậu nghiệm; <b>là xấp xỉ</b>, không phải sự thật tuyệt đối, có thể gây hiểu lầm</td></tr><tr><td><b>Mã lý do (reason codes)</b></td><td>Bắt buộc ở một số lĩnh vực (từ chối tín dụng cần lý do)</td></tr><tr><td><b>Có con người trong vòng lặp</b></td><td>Với quyết định rủi ro cao, mô hình hỗ trợ chứ không tự quyết định</td></tr></table></div>
+<h2>Quyền riêng tư và dữ liệu</h2>
+<ul><li><b>Giảm thiểu dữ liệu</b> thu thập; che và ẩn danh sớm (<a href="https://tracviethustcs.github.io/dataops-notes/#governance-security" target="_blank" rel="noopener">Quản trị dữ liệu</a>).</li><li><b>Mô hình có thể ghi nhớ dữ liệu huấn luyện</b> (đặc biệt mô hình lớn); cẩn thận với dữ liệu cá nhân trong tập huấn luyện và đầu ra.</li><li><b>Yêu cầu xoá dữ liệu</b>: nếu dữ liệu của một người nằm trong tập huấn luyện, cần có quy trình (kể cả học lại mô hình) theo yêu cầu pháp lý.</li><li>Kiểm soát truy cập vào dữ liệu và mô hình.</li></ul>
+<h2>Kiểm toán và truy vết</h2>
+<p>Với mỗi dự đoán quan trọng cần có thể trả lời: <b>phiên bản mô hình nào, đặc trưng đầu vào nào, vào lúc nào, ai/hệ thống nào dùng kết quả</b>. Điều này cần:</p>
+<ul><li>Registry với lineage đầy đủ (<a href="#registry">Registry</a>).</li><li>Log dự đoán có kiểm soát (<a href="#monitoring-drift">Giám sát</a>).</li><li>Nhật ký thay đổi: ai đã nâng bản nào lên production và dựa trên cổng nào.</li></ul>
+<h2>Phân loại rủi ro và quy trình duyệt</h2>
+<p>Không phải mô hình nào cũng cần cùng mức kiểm soát. Một cách làm: <b>phân tầng theo tác động</b>.</p>
+<div class="tw"><table><tr><th>Mức</th><th>Ví dụ</th><th>Kiểm soát</th></tr><tr><td>Thấp</td><td>Gợi ý nội dung, sắp xếp nội bộ</td><td>CI/CD tự động, giám sát cơ bản</td></tr><tr><td>Trung bình</td><td>Dự báo nhu cầu, chấm điểm khách hàng tiềm năng</td><td>Cổng đánh giá, model card, giám sát drift</td></tr><tr><td>Cao</td><td>Tín dụng, tuyển dụng, y tế, an toàn, pháp lý</td><td>Duyệt của con người, đánh giá thiên lệch, giải thích, kiểm toán, có thể cần tuân thủ quy định riêng</td></tr></table></div>
+<h2>Bảo mật cho học máy</h2>
+<div class="tw"><table><tr><th>Rủi ro</th><th>Biện pháp</th></tr><tr><td><b>Đầu độc dữ liệu</b> (kẻ tấn công chèn dữ liệu huấn luyện xấu)</td><td>Kiểm soát nguồn dữ liệu, kiểm tra bất thường, cẩn thận với học liên tục từ dữ liệu người dùng</td></tr><tr><td><b>Ví dụ đối nghịch</b> (đầu vào được chế tác để lừa mô hình)</td><td>Kiểm thử độ bền, xác thực đầu vào, lớp bảo vệ bổ sung</td></tr><tr><td><b>Đánh cắp mô hình, suy ra dữ liệu huấn luyện</b></td><td>Giới hạn tốc độ và truy vấn, xác thực, không lộ điểm chi tiết</td></tr><tr><td><b>Chuỗi cung ứng</b> (mô hình/thư viện độc hại, pickle chạy mã)</td><td>Chỉ dùng nguồn tin cậy, định dạng an toàn, ký và xác minh (<a href="https://tracviethustcs.github.io/k8s-study-notes/#adv-supply-chain" target="_blank" rel="noopener">Chuỗi cung ứng</a>)</td></tr></table></div>
+<div class="callout lab"><b>Viết model card và kế hoạch giám sát cho mô hình của bạn</b><p>Chọn một mô hình thật hoặc giả định, viết một model card theo mẫu trên (dưới 20 dòng). Rồi trả lời:</p>
+<ol><li>Có ai bị ảnh hưởng nặng nếu mô hình sai không, và mô hình thuộc mức rủi ro nào?</li><li>Bạn đo hiệu năng theo <b>lát cắt</b> nào, và ngưỡng tối thiểu của lát cắt yếu nhất là gì?</li><li>Ai được <b>nâng mô hình lên production</b>, dựa trên cổng nào, và ghi ở đâu?</li><li>Nếu một khách hàng hỏi "vì sao tôi bị từ chối", bạn có trả lời được không, và bằng cách nào?</li><li>Dữ liệu cá nhân nào nằm trong tập huấn luyện, và quy trình khi có yêu cầu xoá là gì?</li></ol></div>
+</article>
+<article class="page" data-id="lab-stack" data-group="Thực hành" data-title="Dự án mẫu cục bộ: huấn luyện, đăng ký, phục vụ, giám sát" hidden>
+<h1>Dự án mẫu cục bộ: huấn luyện, đăng ký, phục vụ, giám sát</h1>
+<p class="lead">Một vòng MLOps nhỏ chạy trên máy bạn: huấn luyện nhiều mô hình với MLflow, cổng đánh giá, đăng ký champion, phục vụ qua FastAPI, rồi mô phỏng drift và phát hiện nó. CPU, không cần cloud.</p>
+<h2>Mục tiêu</h2>
+<p>Đi qua gần đủ vòng đời: <b>dữ liệu → thí nghiệm → cổng → registry → phục vụ → giám sát</b>, với mô hình nhỏ để chạy trong vài giây.</p>
+<h2>Bước 1: Môi trường và dữ liệu</h2>
+<pre><code>python3 -m venv ~/mlops-venv &amp;&amp; . ~/mlops-venv/bin/activate
+pip install scikit-learn pandas numpy scipy mlflow fastapi uvicorn httpx joblib pytest
+mkdir -p ~/mlops-lab &amp;&amp; cd ~/mlops-lab
+python3 - &lt;&lt;'EOF'
+import numpy as np, pandas as pd
+rng = np.random.default_rng(11)
+n = 6000
+df = pd.DataFrame({
+    "tenure_months": rng.integers(1, 72, n),
+    "monthly_spend": rng.normal(60, 20, n).clip(5),
+    "support_calls": rng.poisson(1.5, n),
+})
+logit = -1.0 - 0.04 * df.tenure_months + 0.35 * df.support_calls + 0.01 * (df.monthly_spend - 60)
+df["churn"] = (rng.random(n) &lt; 1 / (1 + np.exp(-logit))).astype(int)
+df.to_csv("train.csv", index=False)
+print(df.churn.mean().round(3), "tỷ lệ rời bỏ;", len(df), "dòng")
+EOF</code></pre>
+<h2>Bước 2: Thí nghiệm, cổng chất lượng và đăng ký champion</h2>
+<pre><code>cat &gt; train.py &lt;&lt;'EOF'
+import mlflow, mlflow.sklearn, pandas as pd, numpy as np, json
+from mlflow import MlflowClient
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import roc_auc_score
+
+mlflow.set_tracking_uri("sqlite:///mlflow.db"); mlflow.set_experiment("churn")
+df = pd.read_csv("train.csv"); X, y = df.drop(columns="churn"), df["churn"]
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.3, random_state=0, stratify=y)
+
+candidates = {
+    "logreg": make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)),
+    "gbm": GradientBoostingClassifier(random_state=0),
+}
+best = None
+for name, model in candidates.items():
+    with mlflow.start_run(run_name=name) as run:
+        model.fit(Xtr, ytr)
+        auc = roc_auc_score(yte, model.predict_proba(Xte)[:, 1])
+        mlflow.log_param("model", name); mlflow.log_metric("test_auc", auc)
+        mlflow.set_tag("data_version", "train.csv-v1")
+        mlflow.sklearn.log_model(model, "model", serialization_format="cloudpickle")   # xem ghi chú bên dưới
+        print(f"{name}: AUC={auc:.4f}")
+        if best is None or auc &gt; best[1]: best = (run.info.run_id, auc, name)
+
+run_id, auc, name = best
+client = MlflowClient()
+GATE_MIN_AUC = 0.60
+if auc &lt; GATE_MIN_AUC:
+    raise SystemExit(f"CỔNG: AUC {auc:.3f} &lt; {GATE_MIN_AUC}, dừng, không đăng ký")
+mv = mlflow.register_model(f"runs:/{run_id}/model", "churn-model")
+client.set_registered_model_alias("churn-model", "champion", mv.version)
+json.dump({"auc": auc, "model": name}, open("champion_metrics.json", "w"))
+print("đã đăng ký", name, "phiên bản", mv.version, "thành champion")
+EOF
+python3 train.py</code></pre>
+<div class="callout note"><b>Về định dạng lưu mô hình sklearn của MLflow</b><p>Các bản MLflow mới có thể mặc định lưu mô hình scikit-learn bằng định dạng <b>skops</b> (an toàn hơn pickle) và <b>từ chối loại "không tin cậy"</b>, trong đó có các mô hình cây (Random Forest, Gradient Boosting): <code>log_model</code> báo lỗi "untrusted types" trừ khi bạn khai báo rõ danh sách kiểu tin cậy (<code>skops_trusted_types</code>) sau khi đã xem xét. Trong lab này mô hình do chính bạn huấn luyện nên dùng <code>serialization_format="cloudpickle"</code> cho gọn. Với mô hình đến từ <b>nguồn bên ngoài</b>, hãy làm ngược lại: giữ định dạng an toàn, chỉ tin các kiểu bạn đã kiểm tra (<a href="#registry">Registry</a>, <a href="#serving">Phục vụ</a>). Tên tham số và mặc định thay đổi theo phiên bản MLflow: đối chiếu tài liệu.</p></div>
+<h2>Bước 3: Phục vụ champion</h2>
+<pre><code>cat &gt; serve.py &lt;&lt;'EOF'
+import mlflow, pandas as pd
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+model = mlflow.sklearn.load_model("models:/churn-model@champion")
+app = FastAPI()
+class Customer(BaseModel):
+    tenure_months: int = Field(ge=0, le=600)
+    monthly_spend: float = Field(ge=0)
+    support_calls: int = Field(ge=0)
+@app.get("/healthz")
+def health(): return {"status": "ok"}
+@app.post("/predict")
+def predict(c: Customer):
+    p = float(model.predict_proba(pd.DataFrame([c.model_dump()]))[0, 1])
+    return {"churn_probability": round(p, 4)}
+EOF
+uvicorn serve:app --port 8000 &gt;serve.log 2&gt;&amp;1 &amp;
+sleep 5
+curl -s -X POST localhost:8000/predict -H 'content-type: application/json' -d '{"tenure_months":3,"monthly_spend":80,"support_calls":4}'; echo
+curl -s -X POST localhost:8000/predict -H 'content-type: application/json' -d '{"tenure_months":60,"monthly_spend":50,"support_calls":0}'; echo
+kill $!</code></pre>
+<h2>Bước 4: Giám sát drift</h2>
+<pre><code>cat &gt; monitor.py &lt;&lt;'EOF'
+import numpy as np, pandas as pd
+from scipy.stats import ks_2samp
+
+def psi(expected, actual, bins=10):
+    edges = np.quantile(expected, np.linspace(0, 1, bins + 1)); edges[0], edges[-1] = -np.inf, np.inf
+    e = np.clip(np.histogram(expected, edges)[0] / len(expected), 1e-6, None)
+    a = np.clip(np.histogram(actual, edges)[0] / len(actual), 1e-6, None)
+    return float(np.sum((a - e) * np.log(a / e)))
+
+ref = pd.read_csv("train.csv")
+rng = np.random.default_rng(99)
+live = pd.DataFrame({                                       # "tuần này": nhiều khách mới và gọi hỗ trợ nhiều hơn
+    "tenure_months": rng.integers(1, 20, 2000),
+    "monthly_spend": rng.normal(62, 20, 2000).clip(5),
+    "support_calls": rng.poisson(3.0, 2000),
+})
+for col in ["tenure_months", "monthly_spend", "support_calls"]:
+    v = psi(ref[col].values, live[col].values)
+    status = "ỔN ĐỊNH" if v &lt; 0.1 else ("THAY ĐỔI VỪA" if v &lt; 0.25 else "DRIFT ĐÁNG KỂ")
+    print(f"{col:15s} PSI={v:.3f}  {status}")
+EOF
+python3 monitor.py</code></pre>
+<h2>Bước 5: Kiểm thử và thử phá</h2>
+<pre><code>mkdir -p tests &amp;&amp; cat &gt; tests/test_lab.py &lt;&lt;'EOF'
+import mlflow, pandas as pd, json
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+def test_champion_tai_duoc_va_du_doan_hop_le():
+    m = mlflow.sklearn.load_model("models:/churn-model@champion")
+    p = m.predict_proba(pd.DataFrame([{"tenure_months": 5, "monthly_spend": 70.0, "support_calls": 3}]))[0, 1]
+    assert 0 &lt;= p &lt;= 1
+def test_champion_qua_cong():
+    assert json.load(open("champion_metrics.json"))["auc"] &gt;= 0.60
+EOF
+pytest -q</code></pre>
+<p>Thử phá và quan sát:</p>
+<ol><li>Đặt <code>GATE_MIN_AUC = 0.99</code> rồi chạy lại <code>train.py</code>: điều gì xảy ra với registry? Champion cũ có bị đụng tới không?</li><li>Chạy <code>train.py</code> lần nữa và đổi một ứng viên: bí danh <code>champion</code> trỏ vào phiên bản nào, và dịch vụ đang chạy có tự biết không?</li><li>Trong <code>monitor.py</code>, đặc trưng nào drift mạnh nhất? Đó là drift thật hay lỗi pipeline (dựa trên cách bạn đã tạo dữ liệu)?</li><li>Gửi <code>{"tenure_months": -5, ...}</code> tới dịch vụ: nó trả về gì và vì sao đó là hành vi mong muốn?</li></ol>
+<h2>Câu hỏi mở rộng</h2>
+<ul><li>Bạn biến bước 2 thành <b>pipeline DVC</b> (<a href="#pipelines">Pipeline</a>) và <b>job CI</b> (<a href="#ci-cd-ct">CI/CD/CT</a>) thế nào?</li><li>Khi nhãn "rời bỏ" chỉ có sau 3 tháng, bạn giám sát hiệu năng bằng cách nào ngoài PSI (<a href="#monitoring-drift">Giám sát</a>)?</li><li>Bạn đóng gói <code>serve.py</code> thành container và triển khai canary 10% thế nào (<a href="#serving">Phục vụ</a>, <a href="#deploy-strategies">Chiến lược triển khai</a>)?</li><li>Model card cho mô hình này sẽ ghi gì ở phần hạn chế (<a href="#governance">Quản trị</a>)?</li></ul>
+</article>
+<article class="page" data-id="cheatsheet" data-group="Tham chiếu" data-title="Cheat sheet MLOps" hidden>
+<h1>Cheat sheet MLOps</h1>
+<p class="lead">Tra nhanh khái niệm, lệnh và quy tắc theo nhu cầu.</p>
+<h2>Lệnh và API hay dùng</h2>
+<div class="tw"><table><tr><th>Muốn</th><th>Cách</th></tr><tr><td>Theo dõi một run</td><td><code>mlflow.start_run()</code>, <code>mlflow.log_params()</code>, <code>mlflow.log_metric()</code>, <code>mlflow.sklearn.log_model(m, "model")</code></td></tr><tr><td>Giao diện thí nghiệm</td><td><code>mlflow ui --backend-store-uri sqlite:///mlflow.db</code></td></tr><tr><td>Đăng ký mô hình</td><td><code>mlflow.register_model("runs:/RUN_ID/model", "ten-mo-hinh")</code></td></tr><tr><td>Gắn bí danh</td><td><code>MlflowClient().set_registered_model_alias("ten", "champion", version)</code></td></tr><tr><td>Tải theo bí danh</td><td><code>mlflow.pyfunc.load_model("models:/ten@champion")</code></td></tr><tr><td>Phiên bản hoá dữ liệu</td><td><code>dvc add data/x.csv</code>, <code>dvc push</code>, <code>dvc pull</code></td></tr><tr><td>Chạy pipeline</td><td><code>dvc repro</code>, <code>dvc exp run -S train.max_depth=8</code></td></tr><tr><td>So chỉ số</td><td><code>dvc metrics show</code>, <code>dvc metrics diff HEAD~1</code></td></tr><tr><td>Phục vụ nhanh</td><td><code>uvicorn serve:app --port 8000</code>, <code>mlflow models serve -m models:/ten@champion</code></td></tr></table></div>
+<h2>Nguyên tắc nhớ nhanh</h2>
+<div class="tw"><table><tr><th>Chủ đề</th><th>Quy tắc</th></tr><tr><td>Ba thứ thay đổi</td><td>Mã, dữ liệu, mô hình: phiên bản hoá cả ba</td></tr><tr><td>Tái lập</td><td>Cùng commit + phiên bản dữ liệu + cấu hình + môi trường</td></tr><tr><td>Rò rỉ dữ liệu</td><td>Fit tiền xử lý trên train, chia thời gian theo thời gian, đặc trưng không chứa đáp án</td></tr><tr><td>Lệch huấn luyện/phục vụ</td><td>Một định nghĩa đặc trưng ở cả hai nơi (pipeline hoặc feature store)</td></tr><tr><td>Đánh giá</td><td>Đường cơ sở, so với champion, theo lát cắt, kiểm thử hành vi</td></tr><tr><td>Chỉ số</td><td>Gắn với nghiệp vụ; lớp lệch thì không dùng accuracy</td></tr><tr><td>Cổng</td><td>Bằng mã, trong pipeline; thất bại thì dừng, không tự triển khai</td></tr><tr><td>Triển khai</td><td>Shadow, canary, A/B; đổi con trỏ để quay lui</td></tr><tr><td>Giám sát</td><td>Dữ liệu vào, dự đoán, hiệu năng thật, nghiệp vụ, sức khoẻ dịch vụ</td></tr><tr><td>Drift</td><td>Loại trừ lỗi pipeline dữ liệu trước; PSI &lt; 0,1 ổn, 0,1–0,25 vừa, &gt; 0,25 đáng kể (quy ước)</td></tr><tr><td>Nhãn trễ</td><td>Dùng drift đầu vào và dự đoán làm cảnh báo sớm</td></tr><tr><td>CT</td><td>Kích hoạt theo lịch/dữ liệu/drift, luôn có kiểm tra và cổng</td></tr><tr><td>Hạ tầng</td><td>Đừng mặc định GPU; spot kèm checkpoint cho huấn luyện; batch nếu độ trễ cho phép</td></tr><tr><td>Quản trị</td><td>Model card, thiên lệch theo nhóm, truy vết, người chịu trách nhiệm</td></tr><tr><td>Bảo mật</td><td>Không tải mô hình pickle từ nguồn lạ; chống đầu độc dữ liệu; giới hạn truy vấn</td></tr></table></div>
+<h2>Chọn kiểu phục vụ</h2>
+<div class="tw"><table><tr><th>Nếu</th><th>Chọn</th></tr><tr><td>Độ trễ giờ/ngày chấp nhận được</td><td><b>Batch</b></td></tr><tr><td>Cần trả lời từng yêu cầu trong ms</td><td><b>Online</b></td></tr><tr><td>Xử lý luồng sự kiện liên tục</td><td><b>Streaming</b></td></tr></table></div>
+<h2>Mức trưởng thành MLOps</h2>
+<div class="tw"><table><tr><th>Mức</th><th>Đặc điểm</th></tr><tr><td>0</td><td>Thủ công, notebook, triển khai tay</td></tr><tr><td>1</td><td>Pipeline huấn luyện tự động, huấn luyện liên tục, kiểm tra dữ liệu và mô hình</td></tr><tr><td>2</td><td>CI/CD cho chính pipeline, nhiều mô hình và nhóm</td></tr></table></div>
+</article>
+<article class="page" data-id="quiz-1" data-group="Luyện tập" data-title="Luyện tập 1: Dữ liệu, thí nghiệm, registry và đánh giá" hidden>
+<h1>Luyện tập 1: Dữ liệu, thí nghiệm, registry và đánh giá</h1>
+<p class="lead">6 câu tình huống về rò rỉ dữ liệu, tái lập, registry và đánh giá. Chọn đáp án rồi bấm "Kiểm tra" để xem giải thích. Kết quả được lưu trong trình duyệt.</p>
+<h2>Câu hỏi</h2>
+<div class="quiz"></div>
+<script type="application/json" class="qj">[{"q": "Mô hình dự báo nhu cầu cho AUC/độ chính xác rất cao ở ngoại tuyến nhưng kém hẳn khi triển khai. Dữ liệu là chuỗi thời gian và bạn đã chia train/test ngẫu nhiên. Nguyên nhân khả dĩ nhất?", "o": ["Mô hình quá nhỏ", "Rò rỉ theo thời gian: chia ngẫu nhiên khiến mô hình \"nhìn thấy tương lai\"; phải chia theo thời gian (huấn luyện quá khứ, kiểm thử tương lai)", "Cần tăng số cây", "Cần thêm GPU"], "a": [1], "e": "Với dữ liệu chuỗi thời gian, chia ngẫu nhiên làm các mẫu gần nhau về thời gian nằm ở cả train và test, tạo điểm đánh giá đẹp giả. Phải mô phỏng đúng cách dùng thật: học từ quá khứ để dự đoán tương lai."}, {"q": "Cùng một mã, bạn chạy lại huấn luyện sau một tháng và nhận kết quả khác, không ai biết vì sao. Hai thực hành nào quan trọng nhất để tránh tình huống này?", "o": ["Không thay đổi dữ liệu nữa", "Phiên bản hoá dữ liệu (DVC, snapshot) và ghi lại đầy đủ mã (commit), tham số, hạt giống, phiên bản thư viện trong theo dõi thí nghiệm", "Chạy huấn luyện nhiều lần cho đến khi kết quả đẹp", "Lưu mô hình dưới tên `model_final.pkl`"], "a": [1], "e": "Tái lập cần cố định cả ba: mã, dữ liệu và môi trường/cấu hình. Theo dõi thí nghiệm ghi lại tất cả để mỗi mô hình truy ngược được tới điều kiện tạo ra nó."}, {"q": "Chọn TẤT CẢ phát biểu đúng về rò rỉ dữ liệu và lệch huấn luyện/phục vụ.", "o": ["Đóng gói tiền xử lý vào pipeline của mô hình hoặc dùng feature store giúp một định nghĩa đặc trưng dùng ở cả hai nơi", "Chuẩn hoá hoặc điền thiếu bằng thống kê tính trên toàn bộ dữ liệu (kể cả tập kiểm thử) gây rò rỉ", "Đặc trưng chỉ biết được sau khi biết đáp án (ví dụ \"đã huỷ hợp đồng\") không được dùng khi dự đoán rời bỏ", "Dùng hai đoạn mã khác nhau để tính đặc trưng ở huấn luyện và phục vụ là an toàn miễn cùng ý tưởng"], "a": [0, 1, 2], "e": "Hai đường tính đặc trưng khác nhau là nguyên nhân hàng đầu của lệch huấn luyện/phục vụ, dù ý tưởng giống. Pipeline hoặc feature store bảo đảm cùng một logic ở cả hai nơi; tiền xử lý phải fit chỉ trên train."}, {"q": "Mô hình mới có AUC tổng thể cao hơn champion 0,01, nhưng AUC ở nhóm khách hàng mới (5% dữ liệu) giảm mạnh. Quyết định hợp lý nhất?", "o": ["Triển khai ngay vì AUC tổng thể tốt hơn", "Đánh giá theo lát cắt cho thấy rủi ro ở nhóm khách mới; áp dụng ngưỡng tối thiểu theo lát cắt, điều tra nguyên nhân, và chỉ triển khai khi chấp nhận được (hoặc triển khai kèm biện pháp bảo vệ nhóm đó)", "Xoá nhóm khách mới khỏi tập đánh giá", "Bỏ qua vì nhóm đó nhỏ"], "a": [1], "e": "Điểm tổng thể có thể che mô hình rất tệ ở một nhóm nhỏ nhưng quan trọng. Cổng chất lượng nên có ngưỡng theo lát cắt, và quyết định chấp nhận rủi ro cần có người chịu trách nhiệm."}, {"q": "Dịch vụ phục vụ tải mô hình qua `models:/churn-model@champion`. Mô hình mới vừa được xác nhận tệ hơn dự kiến sau khi nâng bí danh. Cách quay lui nhanh nhất?", "o": ["Xoá registry rồi dựng lại", "Huấn luyện lại mô hình cũ từ đầu", "Sửa mã dịch vụ để trỏ vào tệp cũ", "Đổi bí danh `champion` về phiên bản trước trong registry (và để dịch vụ tải lại hoặc khởi động lại); không cần triển khai lại mã"], "a": [3], "e": "Bí danh là con trỏ tới phiên bản; quay lui chỉ là đổi con trỏ. Điều này đòi hỏi giữ lại phiên bản cũ và dịch vụ biết tải lại khi bí danh đổi."}, {"q": "Một đồng nghiệp đề xuất tải mô hình do người ngoài chia sẻ dưới dạng tệp pickle về chạy thẳng trên máy chủ phục vụ. Rủi ro chính và cách xử lý?", "o": ["Rủi ro duy nhất là tệp lớn", "Không có rủi ro vì đó chỉ là dữ liệu", "Pickle có thể thực thi mã tuỳ ý khi tải; chỉ tải từ nguồn tin cậy, ưu tiên định dạng an toàn hơn (ONNX, safetensors), ký và xác minh artifact, chạy trong môi trường bị giới hạn quyền", "Chỉ cần đổi đuôi tệp"], "a": [2], "e": "Định dạng pickle là mã Python được tuần tự hoá: tải nó có thể chạy lệnh của kẻ tấn công. Là một phần của chuỗi cung ứng mô hình cần được kiểm soát."}]</script>
+</article>
+<article class="page" data-id="quiz-2" data-group="Luyện tập" data-title="Luyện tập 2: Phục vụ, triển khai, drift và CI/CD/CT" hidden>
+<h1>Luyện tập 2: Phục vụ, triển khai, drift và CI/CD/CT</h1>
+<p class="lead">6 câu về triển khai, giám sát, CI/CD/CT và hạ tầng.</p>
+<h2>Câu hỏi</h2>
+<div class="quiz"></div>
+<script type="application/json" class="qj">[{"q": "Mô hình mới tốt hơn champion ngoại tuyến, nhưng chưa ai biết nó phản ứng thế nào với traffic thật và bạn không muốn rủi ro với người dùng. Bước tiếp theo an toàn nhất?", "o": ["Triển khai cho toàn bộ người dùng vào cuối tuần", "Thay thế champion ngay", "Chỉ chạy thêm kiểm thử ngoại tuyến", "Chạy shadow: mô hình mới nhận bản sao yêu cầu thật nhưng dự đoán không được dùng, so sánh với champion; sau đó canary với ngưỡng dừng định trước"], "a": [3], "e": "Shadow cho thấy hành vi trên traffic thật mà không ảnh hưởng người dùng; canary rồi giới hạn rủi ro và đo tác động thật. Cả hai cần chỉ số và ngưỡng quyết định đặt trước."}, {"q": "Nhãn \"khách rời bỏ\" chỉ có sau 3 tháng. Làm sao biết sớm mô hình đang suy giảm?", "o": ["Chờ 3 tháng rồi tính AUC", "Giám sát drift đầu vào và phân phối dự đoán làm cảnh báo sớm, theo dõi chỉ số nghiệp vụ, và xác nhận bằng hiệu năng thật khi nhãn về", "Tăng tần suất huấn luyện lên mỗi ngày", "Không thể biết trước"], "a": [1], "e": "Khi nhãn đến trễ, drift của đặc trưng và dự đoán là tín hiệu không cần nhãn. Hiệu năng thật xác nhận về sau. Học lại thật nhiều không thay thế giám sát."}, {"q": "PSI của đặc trưng `account_age` đột ngột lên 0,9. Việc đầu tiên nên làm?", "o": ["Học lại mô hình ngay", "Bỏ đặc trưng đó khỏi mô hình luôn", "Kiểm tra xem đây là lỗi pipeline dữ liệu (đơn vị đổi, cột thiếu/đổi nguồn) hay drift thật; trước khi học lại phải loại trừ nguyên nhân dữ liệu", "Tắt cảnh báo drift"], "a": [2], "e": "Rất nhiều \"drift\" là lỗi ở nguồn dữ liệu hay tính toán đặc trưng. Học lại trên dữ liệu lỗi sẽ tạo mô hình lỗi. Điều tra trước, rồi quyết định sửa nguồn, quay lui hay học lại."}, {"q": "Chọn TẤT CẢ biện pháp đúng khi bật huấn luyện liên tục (CT) tự động theo dữ liệu mới.", "o": ["Tự động triển khai mọi mô hình vừa huấn luyện xong lên 100% traffic để luôn mới nhất", "Với mô hình rủi ro cao, thêm bước duyệt của con người giữa CT và CD", "Kiểm tra chất lượng dữ liệu trước khi huấn luyện và dừng nếu xấu", "Có cổng đánh giá so với champion; mô hình không qua cổng thì không tự triển khai"], "a": [1, 2, 3], "e": "CT thiếu cổng có thể tự động đưa mô hình tệ hơn lên production, nhất là khi dữ liệu mới có lỗi. Kiểm tra dữ liệu, cổng chất lượng và (khi cần) duyệt của con người là rào chắn."}, {"q": "Nhóm muốn dùng GPU cho mọi dịch vụ dự đoán, kể cả mô hình cây quyết định xử lý bảng dữ liệu nhỏ. Đánh giá hợp lý nhất?", "o": ["GPU không thể dùng trên Kubernetes", "Hợp lý vì GPU luôn nhanh hơn", "Hợp lý vì GPU rẻ hơn CPU", "Không cần: mô hình cổ điển chạy tốt trên CPU; GPU đắt và chỉ đáng khi mô hình học sâu thực sự cần, hãy đo độ trễ và chi phí trước khi quyết định"], "a": [3], "e": "GPU có chi phí cao và cần quản lý riêng. Với mô hình bảng dữ liệu cổ điển, CPU thường đủ nhanh và rẻ hơn nhiều. Quyết định bằng số đo độ trễ và chi phí trên mỗi dự đoán."}, {"q": "Pipeline CI của dự án ML chạy huấn luyện đầy đủ trên toàn bộ dữ liệu (3 giờ) cho mỗi pull request. Cải thiện hợp lý?", "o": ["Chạy huấn luyện đầy đủ chỉ trên máy cá nhân", "Giữ nguyên vì phải kiểm thử kỹ", "Bỏ hẳn kiểm thử khi mở pull request", "Giữ CI nhanh bằng kiểm thử mã, kiểm tra dữ liệu mẫu nhỏ và huấn luyện thử vài giây; huấn luyện đầy đủ thuộc về CT, chạy theo lịch hoặc khi có dữ liệu mới"], "a": [3], "e": "Vòng phản hồi của CI cần ngắn (vài phút). Huấn luyện đầy đủ mất nhiều giờ làm pull request tắc nghẽn; thay bằng smoke test nhỏ, còn CT lo phần huấn luyện lớn."}]</script>
+</article>
+
+    <footer>
+      <p style="margin:0 0 8px"><a href="https://tracviethustcs.github.io/">← Về trang chủ Trác Việt</a></p>
+      <p style="margin:0 0 8px"><b style="color:var(--ink)">Soạn bởi Trác Việt</b> (<a href="https://github.com/TracVietHustCS" target="_blank" rel="noopener">@TracVietHustCS</a>)</p>
+      Ghi chú tự học, tự soạn, không phải tài liệu chính thức của MLflow, Kubeflow, DVC hay nhà cung cấp nào. Công cụ, API và thực hành thay đổi nhanh: hãy đối chiếu tài liệu hiện hành và thử trên dữ liệu và mô hình nhỏ trước. Mô hình ảnh hưởng đến con người cần được đánh giá và kiểm soát kỹ hơn nội dung ghi chú này.
+    </footer>
+  </main>
+
+  <nav id="toc" aria-label="Trong trang này"></nav>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const pages=$$('.page');
+const index=pages.map(p=>p.textContent.toLowerCase());
+let read={};
+try{read=JSON.parse(localStorage.getItem('mlo-read')||'{}')}catch(e){}
+const saveRead=()=>{try{localStorage.setItem('mlo-read',JSON.stringify(read))}catch(e){}};
+
+/* sidebar */
+const groups=[];
+pages.forEach(p=>{
+  let g=groups.find(x=>x.name===p.dataset.group);
+  if(!g){g={name:p.dataset.group,items:[]};groups.push(g)}
+  g.items.push(p);
+});
+let current='overview';
+function buildNav(){
+  $('#side-links').innerHTML=groups.map(g=>`<div class="grp"><h3>${g.name}</h3>${g.items.map(p=>
+    `<a href="#${p.dataset.id}" data-id="${p.dataset.id}" class="${read[p.dataset.id]?'read':''}">${p.dataset.title}</a>`).join('')}</div>`).join('');
+  const n=Object.values(read).filter(Boolean).length;
+  $('#progtxt').textContent=`Đã đọc ${n}/${pages.length} trang`;
+  $('#progbar').style.width=(n/pages.length*100)+'%';
+  $$('#side-links a').forEach(a=>a.classList.toggle('on',a.dataset.id===current));
+  applyFilter();
+}
+
+/* pages */
+function show(id){
+  const page=pages.find(p=>p.dataset.id===id)||pages[0];
+  current=page.dataset.id;
+  pages.forEach(p=>p.hidden=(p!==page));
+  if(!$('.crumb',page)){
+    const c=document.createElement('div');c.className='crumb';
+    c.textContent=page.dataset.group+'  ›  '+page.dataset.title;
+    page.prepend(c);
+  }
+  $$('pre',page).forEach(pre=>{
+    if($('.copy',pre)||pre.classList.contains('ascii'))return;
+    const b=document.createElement('button');b.className='copy';b.type='button';b.textContent='Sao chép';
+    b.addEventListener('click',()=>copyCode(pre,b));
+    pre.appendChild(b);
+  });
+  $$('.mark,.pn',page).forEach(e=>e.remove());
+  const m=document.createElement('div');m.className='mark';
+  m.innerHTML=`<button type="button" aria-pressed="${!!read[current]}">${read[current]?'Đã đọc ✓':'Đánh dấu đã đọc'}</button>`;
+  m.firstChild.addEventListener('click',e=>{
+    read[current]=!read[current];saveRead();
+    e.currentTarget.setAttribute('aria-pressed',!!read[current]);
+    e.currentTarget.textContent=read[current]?'Đã đọc ✓':'Đánh dấu đã đọc';
+    buildNav();
+  });
+  page.appendChild(m);
+  const i=pages.indexOf(page),prev=pages[i-1],next=pages[i+1];
+  const pn=document.createElement('div');pn.className='pn';
+  pn.innerHTML=(prev?`<a href="#${prev.dataset.id}"><small>Trước</small>${prev.dataset.title}</a>`:'<span></span>')+
+               (next?`<a href="#${next.dataset.id}"><small>Tiếp theo</small>${next.dataset.title}</a>`:'');
+  page.appendChild(pn);
+
+  document.title=page.dataset.title+' · MLOps notes';
+  buildNav();initQuiz(page);buildToc(page);
+  window.scrollTo(0,0);
+  closeSide();
+}
+function copyCode(pre,btn){
+  const text=$('code',pre).innerText;
+  const done=()=>{btn.textContent='Đã chép';setTimeout(()=>btn.textContent='Sao chép',1400)};
+  const fallback=()=>{
+    try{const r=document.createRange();r.selectNodeContents($('code',pre));
+      const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();done();}
+    catch(e){btn.textContent='Không chép được'}
+  };
+  try{navigator.clipboard.writeText(text).then(done,fallback)}catch(e){fallback()}
+}
+
+/* on this page */
+let tocItems=[];
+function buildToc(page){
+  const hs=$$('h2,h3',page);
+  tocItems=hs.map((h,i)=>{h.id=`${current}-h${i}`;return {h,a:null}});
+  $('#toc').innerHTML='<h4>Trong trang này</h4>'+hs.map((h,i)=>`<a href="#" class="${h.tagName==='H3'?'l3':''}" data-i="${i}">${h.textContent}</a>`).join('');
+  $$('#toc a').forEach(a=>{
+    tocItems[+a.dataset.i].a=a;
+    a.addEventListener('click',e=>{e.preventDefault();tocItems[+a.dataset.i].h.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})});
+  });
+  spy();
+}
+function spy(){
+  if(!tocItems.length)return;
+  let cur=0;
+  tocItems.forEach((t,i)=>{if(t.h.getBoundingClientRect().top<110)cur=i});
+  tocItems.forEach((t,i)=>t.a&&t.a.classList.toggle('on',i===cur));
+}
+addEventListener('scroll',spy,{passive:true});
+
+/* search */
+function applyFilter(){
+  const q=$('#q').value.trim().toLowerCase();
+  let any=false;
+  $$('.grp').forEach(g=>{
+    let vis=false;
+    $$('a',g).forEach(a=>{
+      const i=pages.findIndex(p=>p.dataset.id===a.dataset.id);
+      const hit=!q||index[i].includes(q)||a.textContent.toLowerCase().includes(q);
+      a.style.display=hit?'':'none'; if(hit)vis=true;
+    });
+    g.style.display=vis?'':'none'; if(vis)any=true;
+  });
+  $('#none').style.display=any?'none':'block';
+}
+$('#q').addEventListener('input',()=>{ if(innerWidth<=820)openSide(); applyFilter(); });
+$('#q').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const a=$$('#side-links a').find(x=>x.style.display!=='none');if(a){location.hash=a.dataset.id;}}
+});
+addEventListener('keydown',e=>{
+  if(e.key==='/'&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}
+});
+
+/* mobile sidebar */
+function openSide(){$('#side').classList.add('open');$('#scrim').classList.add('open')}
+function closeSide(){$('#side').classList.remove('open');$('#scrim').classList.remove('open')}
+$('#burger').addEventListener('click',()=>$('#side').classList.contains('open')?closeSide():openSide());
+$('#scrim').addEventListener('click',closeSide);
+
+/* theme */
+const root=document.documentElement;
+try{const t=localStorage.getItem('mlo-theme');if(t)root.dataset.theme=t}catch(e){}
+$('#theme').addEventListener('click',()=>{
+  const dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+  root.dataset.theme=dark?'light':'dark';
+  try{localStorage.setItem('mlo-theme',root.dataset.theme)}catch(e){}
+});
+
+
+/* ===== quiz engine ===== */
+const qesc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])).replace(/`([^`]+)`/g,'<code>$1</code>');
+function initQuiz(page){
+  const box=$('.quiz',page); if(!box||box.dataset.ready) return;
+  box.dataset.ready='1';
+  const data=JSON.parse($('script.qj',page).textContent);
+  const key='mlo-quiz-'+page.dataset.id;
+  let st={}; try{st=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
+  const sum=document.createElement('div'); sum.className='qsum';
+  box.appendChild(sum);
+  const list=document.createElement('div'); box.appendChild(list);
+  const upd=()=>{
+    const done=Object.keys(st).length, ok=Object.values(st).filter(Boolean).length;
+    sum.innerHTML=`<span>Đã làm <b>${done}/${data.length}</b></span><span>Đúng <b>${ok}</b></span><span>${done?Math.round(ok/done*100)+'%':''}</span><button type="button">Làm lại</button>`;
+    $('button',sum).onclick=()=>{st={};try{localStorage.removeItem(key)}catch(e){};box.dataset.ready='';box.innerHTML='';initQuiz(page)};
+  };
+  data.forEach((d,i)=>{
+    const multi=d.a.length>1;
+    const q=document.createElement('div'); q.className='qs';
+    q.innerHTML=`<p class="qn">Câu ${i+1}</p><p class="qt">${qesc(d.q)}</p><ul class="qo">`+
+      d.o.map((t,j)=>`<li><label><input type="${multi?'checkbox':'radio'}" name="q${i}" value="${j}"><span>${qesc(t)}</span></label></li>`).join('')+
+      `</ul>${multi?`<p class="qh">Chọn ${d.a.length} đáp án</p>`:''}<button class="qb" type="button">Kiểm tra</button><div class="qe" hidden></div>`;
+    list.appendChild(q);
+    const btn=$('.qb',q), ex=$('.qe',q);
+    const finish=(picked,ok)=>{
+      q.classList.add(ok?'right':'wrong');
+      $$('li',q).forEach((li,j)=>{
+        const inp=$('input',li); inp.disabled=true;
+        if(d.a.includes(j)) li.classList.add(picked.includes(j)?'ok':'miss');
+        else if(picked.includes(j)) li.classList.add('bad');
+      });
+      ex.hidden=false; btn.disabled=true;
+      ex.innerHTML=`<b class="v">${ok?'Đúng.':'Chưa đúng.'} Đáp án: ${d.a.map(j=>String.fromCharCode(65+j)).join(', ')}</b>${qesc(d.e)}`;
+    };
+    if(i in st){ // restore state
+      $$('input',q).forEach((inp,j)=>{ if(d.a.includes(j)&&st[i]) inp.checked=true; });
+      finish(st[i]?d.a:[],st[i]);
+    }
+    btn.onclick=()=>{
+      const picked=$$('input:checked',q).map(x=>+x.value);
+      if(!picked.length){ex.hidden=false;ex.textContent='Hãy chọn đáp án trước.';return}
+      const ok=picked.length===d.a.length&&d.a.every(x=>picked.includes(x));
+      st[i]=ok; try{localStorage.setItem(key,JSON.stringify(st))}catch(e){}
+      finish(picked,ok); upd();
+    };
+  });
+  upd();
+}
+
+/* routing: only a plain #page-id is used in the hash */
+addEventListener('hashchange',()=>show(location.hash.slice(1)));
+show(location.hash.slice(1));
+</script>
+</body>
+</html>
