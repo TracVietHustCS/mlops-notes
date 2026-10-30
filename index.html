@@ -355,6 +355,149 @@ print("pipeline (ĐÚNG):", round(good, 3), " &lt;- gần mức ngẫu nhiên (0
 EOF</code></pre>
 <p>Hai con số khác nhau thế nào, và vì sao điểm "rò rỉ" cao dù dữ liệu hoàn toàn ngẫu nhiên? Lập luận tương tự áp dụng cho chuẩn hoá, điền thiếu, mã hoá theo trung bình nhãn. Viết ba cách rò rỉ khác bạn có thể gặp trong dự án của mình.</p></div>
 </article>
+<article class="page" data-id="experiments" data-group="Nền tảng" data-title="Theo dõi thí nghiệm và tái lập kết quả" hidden>
+<h1>Theo dõi thí nghiệm và tái lập kết quả</h1>
+<p class="lead">Huấn luyện mô hình là hàng chục, hàng trăm thí nghiệm. Nếu không ghi lại tham số, dữ liệu, mã và kết quả của từng lần, bạn không thể tái lập, so sánh hay giải thích vì sao mô hình hiện tại tốt.</p>
+<h2>Cần ghi lại gì</h2>
+<div class="tw"><table><tr><th>Nhóm</th><th>Nội dung</th></tr><tr><td><b>Mã</b></td><td>Commit Git (kèm cảnh báo nếu có thay đổi chưa commit)</td></tr><tr><td><b>Dữ liệu</b></td><td>Phiên bản, mã băm hoặc đường dẫn bất biến</td></tr><tr><td><b>Tham số</b></td><td>Siêu tham số, cấu hình tiền xử lý, hạt giống ngẫu nhiên</td></tr><tr><td><b>Môi trường</b></td><td>Phiên bản Python và thư viện, phần cứng, container image</td></tr><tr><td><b>Chỉ số</b></td><td>Kết quả trên train, validation, test; theo lát cắt; thời gian huấn luyện</td></tr><tr><td><b>Sản phẩm</b></td><td>Mô hình, biểu đồ, báo cáo, tệp cấu hình</td></tr></table></div>
+<h2>MLflow Tracking</h2>
+<p>MLflow là công cụ mã nguồn mở phổ biến để theo dõi thí nghiệm (cùng registry, đóng gói, phục vụ).</p>
+<pre><code>import mlflow
+import mlflow.sklearn
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+
+mlflow.set_tracking_uri("sqlite:///mlflow.db")      # nơi lưu siêu dữ liệu (cũng có thể là máy chủ tracking)
+mlflow.set_experiment("churn")
+
+params = {"n_estimators": 200, "max_depth": 6, "random_state": 42}
+
+with mlflow.start_run(run_name="rf-baseline"):
+    mlflow.log_params(params)
+    model = RandomForestClassifier(**params).fit(X_train, y_train)
+    auc = roc_auc_score(y_valid, model.predict_proba(X_valid)[:, 1])
+    mlflow.log_metric("valid_auc", auc)
+    mlflow.sklearn.log_model(model, "model")          # lưu mô hình kèm môi trường
+    mlflow.set_tag("data_version", "train-v3")
+    mlflow.set_tag("git_commit", "3f1a9c2")</code></pre>
+<pre><code>mlflow ui --backend-store-uri sqlite:///mlflow.db     # giao diện web tại http://127.0.0.1:5000</code></pre>
+<p><code>mlflow.autolog()</code> ghi tự động tham số, chỉ số và mô hình cho nhiều thư viện (scikit-learn, XGBoost, PyTorch...) với rất ít mã, nhưng vẫn nên bổ sung <b>thẻ về phiên bản dữ liệu và commit</b>, vì autolog không biết điều đó.</p>
+<p>Công cụ tương tự: Weights &amp; Biases, Neptune, Comet, ClearML, các dịch vụ của cloud.</p>
+<h2>Tái lập kết quả</h2>
+<p>Cùng mã và dữ liệu nhưng khác kết quả thường do:</p>
+<div class="tw"><table><tr><th>Nguyên nhân</th><th>Cách kiểm soát</th></tr><tr><td><b>Hạt giống ngẫu nhiên</b> (chia dữ liệu, khởi tạo trọng số, xáo trộn)</td><td>Đặt <code>random_state</code>/seed cho mọi thư viện; ghi lại giá trị</td></tr><tr><td><b>Phiên bản thư viện</b></td><td>Khoá phiên bản (<code>requirements.txt</code> có phiên bản, lock file), hoặc container</td></tr><tr><td><b>Phần cứng và tính không xác định</b> (GPU, song song)</td><td>Bật chế độ xác định nếu cần; chấp nhận sai khác nhỏ và đo bằng nhiều lần chạy</td></tr><tr><td><b>Dữ liệu thay đổi âm thầm</b></td><td>Phiên bản hoá dữ liệu</td></tr><tr><td><b>Mã chưa commit</b></td><td>Cảnh báo hoặc chặn chạy khi cây làm việc bẩn</td></tr><tr><td><b>Thứ tự dữ liệu, đọc song song</b></td><td>Sắp xếp xác định, ghi cách chia</td></tr></table></div>
+<p>Đặt mục tiêu thực tế: <b>tái lập đến mức sai khác giải thích được</b> (ví dụ AUC dao động 0,002 giữa các lần do ngẫu nhiên), và chạy nhiều hạt giống để biết phương sai trước khi kết luận mô hình A tốt hơn B.</p>
+<h2>So sánh thí nghiệm đúng cách</h2>
+<ul><li>So sánh trên <b>cùng tập kiểm định</b> và <b>cùng cách chia</b>.</li><li>Báo cáo <b>trung bình và độ dao động</b> qua nhiều hạt giống hoặc cross-validation, không chỉ một con số.</li><li>Giữ <b>tập kiểm thử cuối cùng</b> chưa chạm tới cho đến khi chọn xong mô hình: dùng nó nhiều lần là rò rỉ gián tiếp (bạn "học" tập kiểm thử bằng cách chọn).</li><li>Ghi lại <b>thí nghiệm thất bại</b> nữa: kiến thức về cái không hiệu quả cũng có giá trị.</li><li>Luôn có <b>đường cơ sở</b> đơn giản (dự đoán lớp phổ biến, hồi quy logistic, quy tắc nghiệp vụ) để biết mô hình phức tạp có đáng không.</li></ul>
+<h2>Tìm kiếm siêu tham số</h2>
+<p>Tìm kiếm lưới, ngẫu nhiên, tối ưu Bayes (Optuna, Ray Tune, Hyperopt) tạo hàng trăm lần chạy: ghi mỗi lần như một run con của MLflow, và <b>dừng sớm</b> các lần rõ ràng tệ để tiết kiệm. Giới hạn ngân sách tính toán.</p>
+<h2>Cấu trúc dự án để tái lập</h2>
+<pre><code>churn-model/
+├── data/                # dữ liệu (theo dõi bằng DVC), không commit tệp lớn
+├── src/
+│   ├── features.py      # tiền xử lý/đặc trưng: dùng chung cho huấn luyện và phục vụ
+│   ├── train.py         # nhận tham số từ params.yaml, ghi MLflow
+│   └── evaluate.py
+├── params.yaml          # mọi tham số ở MỘT nơi, nằm trong Git
+├── dvc.yaml             # pipeline (xem trang Pipeline)
+├── requirements.txt     # khoá phiên bản
+├── tests/
+└── Dockerfile           # môi trường huấn luyện/phục vụ giống nhau</code></pre>
+<p>Đặt mọi tham số trong tệp cấu hình (không viết cứng trong mã) để một lần chạy được xác định hoàn toàn bởi <b>commit Git + phiên bản dữ liệu</b>.</p>
+<div class="callout lab"><b>Theo dõi ba lần chạy và so sánh</b><pre><code>python3 - &lt;&lt;'EOF'
+import mlflow, mlflow.sklearn
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
+
+mlflow.set_tracking_uri("sqlite:///mlflow.db"); mlflow.set_experiment("lab-experiments")
+X, y = make_classification(n_samples=2000, n_features=20, n_informative=5, random_state=1)
+Xtr, Xva, ytr, yva = train_test_split(X, y, test_size=0.25, random_state=1)
+
+configs = [("logreg", LogisticRegression(max_iter=500), {"C": 1.0}),
+           ("rf-depth4", RandomForestClassifier(max_depth=4, random_state=0), {"max_depth": 4}),
+           ("rf-depth12", RandomForestClassifier(max_depth=12, random_state=0), {"max_depth": 12})]
+for name, model, p in configs:
+    with mlflow.start_run(run_name=name):
+        mlflow.log_params(p); mlflow.set_tag("data_version", "synthetic-seed1")
+        model.fit(Xtr, ytr)
+        auc = roc_auc_score(yva, model.predict_proba(Xva)[:, 1])
+        mlflow.log_metric("valid_auc", auc); print(name, round(auc, 4))
+EOF
+mlflow ui --backend-store-uri sqlite:///mlflow.db &amp;      # mở http://127.0.0.1:5000, so sánh các run; Ctrl+C khi xong</code></pre>
+<p>Trong giao diện, so sánh ba run theo <code>valid_auc</code>. Điều gì khiến bạn tin kết quả này đủ chắc để chọn mô hình? Bạn cần làm thêm gì (nhiều hạt giống, tập kiểm thử cuối, đường cơ sở) trước khi quyết định?</p></div>
+</article>
+<article class="page" data-id="pipelines" data-group="Nền tảng" data-title="Pipeline huấn luyện và điều phối" hidden>
+<h1>Pipeline huấn luyện và điều phối</h1>
+<p class="lead">Pipeline biến việc huấn luyện từ chuỗi thao tác tay trong notebook thành một quy trình tự động, lặp lại được, chạy theo lịch hoặc theo sự kiện. Đây là bước chuyển từ mức MLOps 0 lên mức 1.</p>
+<h2>Các bước điển hình</h2>
+<pre class="ascii"><code>  Lấy dữ liệu -&gt; Kiểm tra dữ liệu -&gt; Tính đặc trưng -&gt; Huấn luyện -&gt; Đánh giá -&gt; [CỔNG] -&gt; Đăng ký mô hình
+        |                |                                                       |
+   (phiên bản)    (dừng nếu dữ liệu xấu)                          (dừng nếu không tốt hơn mô hình hiện tại)</code></pre>
+<p>Mỗi bước là một đơn vị riêng, đầu vào và đầu ra rõ ràng, <b>idempotent</b>, và có thể chạy lại độc lập. Cổng đánh giá quyết định mô hình mới có được đi tiếp hay không (<a href="#evaluation">Đánh giá</a>).</p>
+<h2>DVC pipeline: pipeline gắn với dữ liệu và mã</h2>
+<p>DVC cho phép mô tả pipeline trong <code>dvc.yaml</code>, tự theo dõi phụ thuộc và <b>chỉ chạy lại bước nào có đầu vào thay đổi</b>:</p>
+<pre><code><span class="cm"># params.yaml</span>
+train:
+  n_estimators: 200
+  max_depth: 6
+  seed: 42
+
+<span class="cm"># dvc.yaml</span>
+stages:
+  prepare:
+    cmd: python src/prepare.py data/raw.csv data/clean.csv
+    deps: [src/prepare.py, data/raw.csv]
+    outs: [data/clean.csv]
+  train:
+    cmd: python src/train.py data/clean.csv models/model.joblib
+    deps: [src/train.py, data/clean.csv]
+    params: [train.n_estimators, train.max_depth, train.seed]
+    outs: [models/model.joblib]
+    metrics:
+      - metrics.json: {cache: false}</code></pre>
+<pre><code>dvc repro                       # chạy các bước cần chạy lại
+dvc metrics show                # chỉ số hiện tại
+dvc metrics diff HEAD~1         # so với commit trước
+dvc exp run -S train.max_depth=8     # thí nghiệm nhanh đổi tham số mà chưa commit</code></pre>
+<p>Điểm hay: pipeline, dữ liệu, tham số và chỉ số cùng gắn với <b>commit Git</b>; quay về một commit là quay về đúng trạng thái (kèm <code>dvc pull</code>).</p>
+<h2>Công cụ điều phối</h2>
+<div class="tw"><table><tr><th>Công cụ</th><th>Ghi chú</th></tr><tr><td><b>DVC</b></td><td>Nhẹ, gắn với Git, hợp pipeline cục bộ và nhóm nhỏ</td></tr><tr><td><b>Apache Airflow, Dagster, Prefect</b></td><td>Điều phối đa dụng, hợp khi pipeline ML là một phần của luồng dữ liệu lớn hơn (<a href="https://tracviethustcs.github.io/dataops-notes/#orchestration" target="_blank" rel="noopener">Orchestration</a>)</td></tr><tr><td><b>Kubeflow Pipelines, Argo Workflows, Tekton</b></td><td>Chạy từng bước như container trên Kubernetes, hợp quy mô lớn, cần GPU</td></tr><tr><td><b>Metaflow, ZenML, Flyte</b></td><td>Khung "Python-first" dành cho ML, ẩn bớt hạ tầng</td></tr><tr><td><b>Dịch vụ của cloud</b></td><td>SageMaker Pipelines, Vertex AI Pipelines, Azure ML Pipelines</td></tr></table></div>
+<p>Chọn theo hạ tầng sẵn có và kỹ năng đội: một pipeline DVC trong CI thường đủ cho khởi đầu.</p>
+<h2>Kích hoạt huấn luyện</h2>
+<div class="tw"><table><tr><th>Kích hoạt</th><th>Khi nào hợp</th></tr><tr><td><b>Theo lịch</b> (hằng tuần/tháng)</td><td>Dữ liệu đổi đều, mô hình cần làm mới định kỳ</td></tr><tr><td><b>Khi có dữ liệu mới</b></td><td>Dữ liệu đến thành lô</td></tr><tr><td><b>Khi phát hiện drift hoặc suy giảm</b></td><td>Có giám sát tốt (<a href="#monitoring-drift">Giám sát</a>)</td></tr><tr><td><b>Khi mã thay đổi</b> (CI)</td><td>Kiểm tra mã huấn luyện còn chạy được, chạy trên dữ liệu nhỏ</td></tr><tr><td><b>Thủ công</b></td><td>Thí nghiệm có chủ đích</td></tr></table></div>
+<p>Học lại tự động (continuous training) rất tiện nhưng nguy hiểm nếu thiếu cổng: mô hình mới huấn luyện trên dữ liệu bị lỗi có thể <b>tự động triển khai thứ tệ hơn</b>. Luôn có kiểm tra dữ liệu, so sánh với mô hình hiện tại và (với rủi ro cao) bước duyệt.</p>
+<h2>Nguyên tắc thiết kế pipeline</h2>
+<ul><li><b>Bước nhỏ, đầu vào/đầu ra tường minh</b>, không giữ trạng thái ẩn.</li><li><b>Idempotent và có thể chạy lại</b>, giống tác vụ dữ liệu (<a href="https://tracviethustcs.github.io/dataops-notes/#orchestration" target="_blank" rel="noopener">DataOps</a>).</li><li><b>Tách cấu hình khỏi mã</b> (<code>params.yaml</code>).</li><li><b>Dùng cùng mã đặc trưng cho huấn luyện và phục vụ.</b></li><li><b>Ghi lại tất cả</b> vào theo dõi thí nghiệm (mã, dữ liệu, tham số, chỉ số).</li><li><b>Môi trường đóng gói</b> (container) giống nhau mọi nơi chạy.</li><li><b>Cache</b> các bước tốn kém (đặc trưng, tiền xử lý) khi đầu vào không đổi.</li><li><b>Thử trên dữ liệu nhỏ</b> trước khi chạy toàn bộ tốn kém.</li></ul>
+<div class="callout lab"><b>Pipeline DVC nhỏ chạy cục bộ</b><pre><code>mkdir -p ~/dvc-lab/src ~/dvc-lab/data &amp;&amp; cd ~/dvc-lab &amp;&amp; git init -q . &amp;&amp; pip install -q dvc scikit-learn pandas joblib pyyaml
+dvc init -q
+python3 - &lt;&lt;'EOF'
+from sklearn.datasets import make_classification
+import pandas as pd
+X, y = make_classification(n_samples=1500, n_features=10, n_informative=4, random_state=0)
+df = pd.DataFrame(X, columns=[f"f{i}" for i in range(10)]); df["y"] = y; df.to_csv("data/raw.csv", index=False)
+EOF
+cat &gt; src/train.py &lt;&lt;'EOF'
+import sys, json, yaml, joblib, pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
+p = yaml.safe_load(open("params.yaml"))["train"]
+df = pd.read_csv(sys.argv[1]); X, y = df.drop(columns="y"), df["y"]
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.25, random_state=p["seed"])
+m = RandomForestClassifier(n_estimators=p["n_estimators"], max_depth=p["max_depth"], random_state=p["seed"]).fit(Xtr, ytr)
+joblib.dump(m, sys.argv[2]); json.dump({"auc": roc_auc_score(yte, m.predict_proba(Xte)[:, 1])}, open("metrics.json", "w"))
+EOF
+printf 'train:\n  n_estimators: 100\n  max_depth: 5\n  seed: 42\n' &gt; params.yaml
+mkdir -p models
+dvc stage add -n train -d src/train.py -d data/raw.csv -p train.n_estimators,train.max_depth,train.seed -o models/model.joblib -M metrics.json python src/train.py data/raw.csv models/model.joblib
+dvc repro &amp;&amp; cat metrics.json
+dvc repro                                  # không đổi gì: DVC bỏ qua bước
+sed -i 's/max_depth: 5/max_depth: 8/' params.yaml &amp;&amp; dvc repro &amp;&amp; dvc metrics diff</code></pre>
+<p>Quan sát: lần <code>dvc repro</code> thứ hai nói gì? Sau khi đổi <code>max_depth</code>, DVC chạy lại bước nào, và <code>dvc metrics diff</code> cho thấy điều gì?</p></div>
+</article>
 <article class="page" data-id="registry" data-group="Mô hình" data-title="Model registry" hidden>
 <h1>Model registry</h1>
 <p class="lead">Model registry là kho trung tâm quản lý các phiên bản mô hình: ai huấn luyện, từ dữ liệu nào, chỉ số ra sao, đang ở giai đoạn nào, và bản nào đang chạy ở production. Nó biến "tệp mô hình trong thư mục" thành tài sản có kiểm soát.</p>
